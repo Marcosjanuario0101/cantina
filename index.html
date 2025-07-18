@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cantina da Igreja v3.0 - Offline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { background-color: #4f46e5; color: white; }
+        .nav-link:not(.active):hover { background-color: #e0e7ff; }
+        .product-card { transition: transform 0.1s ease-in-out; }
+        .product-card:active { transform: scale(0.95); }
+        .product-card.disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+        .low-stock { color: #dc2626; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .category-btn.active { background-color: #4f46e5; color: white; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Container Principal da Aplicação -->
+    <div id="app-container" class="max-w-7xl mx-auto p-4">
+        <!-- Cabeçalho e Navegação -->
+        <header class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-indigo-600">Cantina do Acampamento</h1>
+                    <p class="text-gray-500">Sistema de Ponto de Venda (PDV)</p>
+                </div>
+                <div>
+                    <label for="sale-date" class="block text-sm font-medium text-gray-700">Data da Venda</label>
+                    <input type="date" id="sale-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+            <nav class="mt-4 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px">
+                    <li><a href="#" id="nav-dashboard" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Dashboard</a></li>
+                    <li><a href="#" id="nav-pdv" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">PDV</a></li>
+                    <li><a href="#" id="nav-products" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Produtos</a></li>
+                    <li><a href="#" id="nav-customers" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Clientes</a></li>
+                    <li><a href="#" id="nav-reports" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Relatório de Vendas</a></li>
+                    <li><a href="#" id="nav-customer-reports" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Relatório de Clientes</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            <!-- Tela de Carregamento -->
+            <div id="loading-view" class="text-center p-10">
+                <p class="text-lg text-gray-600">Conectando ao sistema e carregando dados locais...</p>
+            </div>
+            
+            <!-- Seção Dashboard -->
+            <div id="dashboard-view" class="hidden">
+                 <h2 class="text-2xl font-semibold mb-4">Painel de Controle (Hoje)</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                     <div class="bg-white p-6 rounded-lg shadow">
+                         <h3 class="text-lg font-medium text-gray-500">Vendas Totais do Dia</h3>
+                         <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow">
+                         <h3 class="text-lg font-medium text-gray-500">Produtos Mais Vendidos</h3>
+                         <ul id="dashboard-top-products" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
+                     </div>
+                     <div class="bg-white p-6 rounded-lg shadow">
+                         <h3 class="text-lg font-medium text-gray-500">Últimas Transações</h3>
+                         <ul id="dashboard-recent-transactions" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Seção PDV (Ponto de Venda) -->
+            <div id="pdv-view" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-semibold">Selecione os Produtos</h2>
+                        </div>
+                        <div id="category-filters" class="flex flex-wrap gap-2 mb-4"></div>
+                        <div id="product-list-pdv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-2xl font-semibold mb-4">Pedido Atual</h2>
+                        <div class="mb-4">
+                            <label for="customer-select" class="block text-sm font-medium text-gray-700">Cliente</label>
+                            <div class="flex gap-2 mt-1">
+                                <select id="customer-select" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"></select>
+                                <button id="add-customer-pdv-btn" class="bg-indigo-100 text-indigo-700 p-2 rounded-md hover:bg-indigo-200">+</button>
+                            </div>
+                        </div>
+                        <div id="current-order" class="space-y-2 mb-4 min-h-[100px] border-b pb-4"></div>
+                        <div class="text-right">
+                            <p class="text-lg font-semibold">Total: <span id="order-total" class="text-indigo-600">R$ 0,00</span></p>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
+                            <div id="payment-method" class="mt-2 grid grid-cols-2 gap-2">
+                                <button data-method="Saldo" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Saldo</button>
+                                <button data-method="Pagar Depois" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Pagar Depois</button>
+                                <button data-method="PIX" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">PIX</button>
+                                <button data-method="Dinheiro" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Dinheiro</button>
+                                <button data-method="Cartão" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Cartão</button>
+                            </div>
+                        </div>
+                        <button id="finalize-sale-btn" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400">
+                            Finalizar Compra
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Produtos -->
+            <div id="products-view" class="hidden bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Gerenciar Produtos</h2>
+                    <div class="flex gap-2">
+                        <button id="add-category-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Categoria</button>
+                        <button id="export-products-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                    </div>
+                </div>
+                <form id="add-product-form" class="mb-6 grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+                    <div>
+                        <label for="product-name" class="block text-sm font-medium text-gray-700">Nome</label>
+                        <input type="text" id="product-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                     <div>
+                        <label for="product-category" class="block text-sm font-medium text-gray-700">Categoria</label>
+                        <select id="product-category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select>
+                    </div>
+                    <div>
+                        <label for="product-cost-price" class="block text-sm font-medium text-gray-700">Preço Custo</label>
+                        <input type="number" id="product-cost-price" step="0.01" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="product-price" class="block text-sm font-medium text-gray-700">Preço Venda</label>
+                        <input type="number" id="product-price" step="0.01" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="product-initial-stock" class="block text-sm font-medium text-gray-700">Estoque</label>
+                        <input type="number" id="product-initial-stock" step="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <button type="submit" class="sm:col-span-5 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 h-fit">Adicionar Produto</button>
+                </form>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço Venda</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list-table" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Clientes -->
+            <div id="customers-view" class="hidden bg-white p-6 rounded-lg shadow">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Gerenciar Clientes</h2>
+                    <button id="export-customers-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                </div>
+                 <button id="add-customer-view-btn" class="mb-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Adicionar Novo Cliente</button>
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-list-table" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Relatórios de Vendas -->
+            <div id="reports-view" class="hidden bg-white p-6 rounded-lg shadow">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Relatório de Vendas</h2>
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <label for="report-date-start" class="block text-sm font-medium text-gray-700">De:</label>
+                            <input type="date" id="report-date-start" class="border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        </div>
+                        <div>
+                            <label for="report-date-end" class="block text-sm font-medium text-gray-700">Até:</label>
+                            <input type="date" id="report-date-end" class="border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600">R$ 0,00</p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600">R$ 0,00</p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Vendas</h4><p id="period-transactions" class="text-xl font-bold">0</p></div>
+                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold">0</p></div>
+                </div>
+                 <div class="bg-white p-4 rounded-lg shadow-inner mb-6">
+                    <h3 class="text-lg font-semibold mb-2">Fechamento de Caixa</h3>
+                    <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <button id="export-sales-report-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Itens</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pagamento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-list-table" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Seção de Relatórios de Clientes -->
+            <div id="customer-reports-view" class="hidden bg-white p-6 rounded-lg shadow">
+                 <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Relatório de Clientes</h2>
+                    <button id="export-customer-report-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                </div>
+                 <div id="customer-report-container" class="space-y-6">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+    <div id="edit-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+    <div id="add-balance-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+    <div id="add-customer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto p-4"></div>
+    <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+
+
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Corrigida a importação para a função de persistência offline
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, writeBatch, query, where, Timestamp, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO INICIAL ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'canteen-app-default';
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // --- VARIÁVEIS GLOBAIS E ESTADO DA APLICAÇÃO ---
+        let currentView = 'dashboard';
+        let currentOrder = [];
+        let products = [];
+        let customers = [];
+        let categories = [];
+        let allTransactions = [];
+        let transactionsForReport = [];
+        let balanceLogs = [];
+        let dbCollections = {};
+        let onConfirmCallback = null;
+        let selectedPaymentMethod = null;
+        let dataUnsubscribes = [];
+        const LOW_STOCK_THRESHOLD = 5;
+
+        // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) { // Usuário logado
+                document.getElementById('loading-view').classList.add('hidden');
+                
+                dbCollections = {
+                    products: collection(db, `artifacts/${appId}/users/${user.uid}/products`),
+                    customers: collection(db, `artifacts/${appId}/users/${user.uid}/customers`),
+                    transactions: collection(db, `artifacts/${appId}/users/${user.uid}/transactions`),
+                    balance_logs: collection(db, `artifacts/${appId}/users/${user.uid}/balance_logs`),
+                    categories: collection(db, `artifacts/${appId}/users/${user.uid}/categories`),
+                };
+                
+                setupDataListeners();
+                setInitialDate();
+                showView('dashboard');
+            }
+        });
+
+        async function initializeAppLogic() {
+            // Ativar a persistência offline ANTES de qualquer outra operação do Firestore
+            try {
+                // Corrigido para enableIndexedDbPersistence
+                await enableIndexedDbPersistence(db);
+                console.log("Persistência offline ativada com sucesso.");
+            } catch (err) {
+                if (err.code == 'failed-precondition') {
+                    console.warn("Falha ao ativar persistência offline: Múltiplas abas abertas podem causar isso.");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("O navegador atual não suporta a persistência offline.");
+                }
+            }
+
+            // Após tentar ativar a persistência, continua com a autenticação
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+                showSimpleMessage("Erro de Conexão", "Não foi possível conectar ao serviço. Verifique a configuração do Firebase e se o método de autenticação está ativado.");
+            }
+        }
+
+        // --- FUNÇÕES DE NAVEGAÇÃO E UI ---
+        function showView(viewId) {
+            Array.from(document.getElementById('main-content').children).forEach(child => child.classList.add('hidden'));
+            const viewElement = document.getElementById(`${viewId}-view`);
+            if (viewElement) viewElement.classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.getElementById(`nav-${viewId}`);
+            if(activeLink) activeLink.classList.add('active');
+
+            currentView = viewId;
+            if (viewId === 'dashboard') renderDashboard();
+            if (viewId === 'reports') setupTransactionsListener();
+            if (viewId === 'customer-reports') renderCustomerReports();
+        }
+        
+        function showModal(modalId, content) {
+            const modal = document.getElementById(modalId);
+            modal.innerHTML = content;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            modal.innerHTML = '';
+        }
+        
+        function showSimpleMessage(title, message) {
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-gray-500">${message}</p></div>
+                    <div class="mt-4">
+                        <button id="simple-message-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none">OK</button>
+                    </div>
+                </div>`;
+            showModal('message-modal', content);
+            document.getElementById('simple-message-ok-btn').onclick = () => closeModal('message-modal');
+        }
+        
+        function showConfirmModal(title, message, callback) {
+            onConfirmCallback = callback;
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-gray-500">${message}</p></div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button id="confirm-modal-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:col-start-2 sm:text-sm">Confirmar</button>
+                        <button id="confirm-modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:col-start-1 sm:text-sm">Cancelar</button>
+                    </div>
+                </div>`;
+            showModal('confirm-modal', content);
+            document.getElementById('confirm-modal-confirm-btn').onclick = () => {
+                if(onConfirmCallback) onConfirmCallback();
+                closeModal('confirm-modal');
+            };
+            document.getElementById('confirm-modal-cancel-btn').onclick = () => closeModal('confirm-modal');
+        }
+
+        // --- LÓGICA DE INICIALIZAÇÃO ---
+        function setInitialDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sale-date').value = today;
+            const reportDateStartInput = document.getElementById('report-date-start');
+            const reportDateEndInput = document.getElementById('report-date-end');
+            if (reportDateStartInput) reportDateStartInput.value = today;
+            if (reportDateEndInput) reportDateEndInput.value = today;
+        }
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
+        function renderDashboard() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const todaysTransactions = allTransactions.filter(t => t.createdAt.toDate() >= today);
+
+            // Total de Vendas
+            const totalSales = todaysTransactions.reduce((sum, t) => sum + t.total, 0);
+            document.getElementById('dashboard-total-sales').textContent = `R$ ${totalSales.toFixed(2)}`;
+
+            // Produtos mais vendidos
+            const productCounts = todaysTransactions.flatMap(t => t.items).reduce((acc, item) => {
+                acc[item.name] = (acc[item.name] || 0) + item.quantity;
+                return acc;
+            }, {});
+            const topProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const topProductsList = document.getElementById('dashboard-top-products');
+            topProductsList.innerHTML = topProducts.map(p => `<li><span class="font-semibold">${p[1]}x</span> ${p[0]}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
+
+            // Últimas transações
+            const recentTransactions = todaysTransactions.sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()).slice(0, 5);
+            const recentTransactionsList = document.getElementById('dashboard-recent-transactions');
+            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li>${t.customerName} - R$ ${t.total.toFixed(2)}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
+        }
+        
+        function renderCategoryOptions(selectElementId, selectedCategory = null) {
+            const select = document.getElementById(selectElementId);
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione uma categoria</option>';
+            categories.forEach(cat => {
+                const selected = cat.name === selectedCategory ? 'selected' : '';
+                select.innerHTML += `<option value="${cat.name}" ${selected}>${cat.name}</option>`;
+            });
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = `<button class="category-btn active bg-gray-200 py-1 px-3 rounded-full text-sm" data-category="all">Todos</button>`;
+            categories.forEach(cat => {
+                container.innerHTML += `<button class="category-btn bg-gray-200 py-1 px-3 rounded-full text-sm" data-category="${cat.name}">${cat.name}</button>`;
+            });
+        }
+
+        function filterProductsByCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.category-btn[data-category="${category}"]`).classList.add('active');
+            
+            const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+            renderProductsPDV(filteredProducts);
+        }
+
+        function renderProductsTable() {
+            const tableBody = document.getElementById('product-list-table');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            products.forEach(p => {
+                const stockClass = p.availableStock <= LOW_STOCK_THRESHOLD ? 'low-stock' : '';
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${p.price.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${stockClass}">${p.availableStock}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${p.id}" class="edit-product-btn text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
+                            <button data-id="${p.id}" class="delete-product-btn text-red-600 hover:text-red-900">Excluir</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function renderProductsPDV(productsToRender = products) {
+            const container = document.getElementById('product-list-pdv');
+            if (!container) return;
+            container.innerHTML = '';
+            productsToRender.forEach(p => {
+                const disabled = p.availableStock <= 0 ? 'disabled' : '';
+                const stockClass = p.availableStock <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'text-blue-600';
+                container.innerHTML += `
+                    <div class="product-card cursor-pointer bg-gray-50 border rounded-lg p-3 text-center hover:bg-indigo-100 hover:border-indigo-500 ${disabled}" data-id="${p.id}">
+                        <p class="font-semibold text-sm">${p.name}</p>
+                        <p class="text-xs text-gray-600">R$ ${p.price.toFixed(2)}</p>
+                        <p class="text-xs ${stockClass}">Estoque: ${p.availableStock}</p>
+                    </div>`;
+            });
+        }
+
+        function renderCustomersTable() {
+            const tableBody = document.getElementById('customer-list-table');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            customers.forEach(c => {
+                const balanceClass = c.balance < 0 ? 'text-red-600' : 'text-gray-500';
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${c.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${c.phone}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${balanceClass}">R$ ${c.balance.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${c.id}" class="add-balance-btn text-green-600 hover:text-green-900 mr-3">Adicionar Saldo</button>
+                            <button data-id="${c.id}" class="delete-customer-btn text-red-600 hover:text-red-900">Excluir</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function renderCustomersSelect() {
+            const select = document.getElementById('customer-select');
+            if (!select) return;
+            select.innerHTML = '<option value="">Cliente Avulso</option>';
+            customers.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.name} (Saldo: R$ ${c.balance.toFixed(2)})</option>`;
+            });
+        }
+
+        function renderCurrentOrder() {
+            const orderContainer = document.getElementById('current-order');
+            const totalEl = document.getElementById('order-total');
+            if (!orderContainer || !totalEl) return;
+            orderContainer.innerHTML = '';
+            let total = 0;
+
+            const itemsCount = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
+
+            Object.keys(itemsCount).forEach(id => {
+                const product = products.find(p => p.id === id);
+                if (product) {
+                    const count = itemsCount[id];
+                    total += product.price * count;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex justify-between items-center text-sm py-1';
+                    itemDiv.innerHTML = `
+                        <div>
+                            <span class="font-medium">${count}x ${product.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                             <span class="text-gray-600">R$ ${(product.price * count).toFixed(2)}</span>
+                             <button data-id="${id}" class="remove-from-cart-btn bg-red-100 text-red-600 rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs hover:bg-red-200">&times;</button>
+                        </div>
+                    `;
+                    orderContainer.appendChild(itemDiv);
+                }
+            });
+            totalEl.textContent = `R$ ${total.toFixed(2)}`;
+        }
+
+        function renderTransactionsTable() {
+            const tableBody = document.getElementById('transactions-list-table');
+            const periodTotalEl = document.getElementById('period-total');
+            const periodProfitEl = document.getElementById('period-profit');
+            const periodTransactionsEl = document.getElementById('period-transactions');
+            const periodItemsEl = document.getElementById('period-items');
+            const cashClosingSummaryEl = document.getElementById('cash-closing-summary');
+
+            if (!tableBody || !periodTotalEl) return;
+            tableBody.innerHTML = '';
+            let periodTotal = 0;
+            let periodProfit = 0;
+            let periodItems = 0;
+            const cashClosing = {};
+
+            transactionsForReport.forEach(tx => {
+                const txDate = tx.createdAt.toDate();
+                const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                let transactionProfit = 0;
+                tx.items.forEach(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    if (product && product.costPrice) {
+                        transactionProfit += (item.price - product.costPrice) * item.quantity;
+                    }
+                });
+                
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${txDate.toLocaleString('pt-BR')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tx.customerName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${itemsStr}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tx.paymentMethod}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">R$ ${transactionProfit.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${tx.total.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 hover:text-red-900">Cancelar</button>
+                        </td>
+                    </tr>`;
+                periodTotal += tx.total;
+                periodProfit += transactionProfit;
+                periodItems += tx.items.reduce((sum, item) => sum + item.quantity, 0);
+
+                if (tx.paymentMethod !== 'Saldo' && tx.paymentMethod !== 'Pagar Depois') {
+                    cashClosing[tx.paymentMethod] = (cashClosing[tx.paymentMethod] || 0) + tx.total;
+                }
+            });
+            periodTotalEl.textContent = `R$ ${periodTotal.toFixed(2)}`;
+            periodProfitEl.textContent = `R$ ${periodProfit.toFixed(2)}`;
+            periodTransactionsEl.textContent = transactionsForReport.length;
+            periodItemsEl.textContent = periodItems;
+            
+            cashClosingSummaryEl.innerHTML = Object.entries(cashClosing)
+                .map(([method, total]) => `<div><span class="font-semibold">${method}:</span> R$ ${total.toFixed(2)}</div>`)
+                .join('') || 'Nenhum recebimento em caixa.';
+        }
+        
+        function renderCustomerReports() {
+            const container = document.getElementById('customer-report-container');
+            if (!container) return;
+            container.innerHTML = '';
+            customers.forEach(customer => {
+                const customerTransactions = allTransactions.filter(t => t.customerId === customer.id);
+                const customerBalanceLogs = balanceLogs.filter(l => l.customerId === customer.id);
+                const totalSpent = customerTransactions.reduce((sum, t) => sum + t.total, 0);
+                const balanceClass = customer.balance < 0 ? 'text-red-600' : 'text-green-600';
+
+                let purchasesHtml = '<p class="text-sm text-gray-500">Nenhuma compra registrada.</p>';
+                if (customerTransactions.length > 0) {
+                    purchasesHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
+                    customerTransactions.forEach(tx => {
+                        tx.items.forEach(item => {
+                            purchasesHtml += `<li class="text-sm text-gray-700">${item.quantity}x ${item.name} - R$ ${item.price.toFixed(2)} (em ${tx.createdAt.toDate().toLocaleDateString()})</li>`;
+                        });
+                    });
+                    purchasesHtml += '</ul>';
+                }
+                
+                let balanceLogHtml = '<p class="text-sm text-gray-500">Nenhuma recarga registrada.</p>';
+                 if (customerBalanceLogs.length > 0) {
+                    balanceLogHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
+                    customerBalanceLogs.forEach(log => {
+                        balanceLogHtml += `<li class="text-sm text-gray-700">+ R$ ${log.amount.toFixed(2)} (${log.paymentMethod}) em ${log.createdAt.toDate().toLocaleDateString()}</li>`;
+                    });
+                    balanceLogHtml += '</ul>';
+                }
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold text-indigo-700">${customer.name}</h3>
+                        <div class="grid grid-cols-2 gap-4 mt-2 text-sm">
+                            <div><span class="font-semibold">Telefone:</span> ${customer.phone}</div>
+                            <div><span class="font-semibold">Responsável:</span> ${customer.responsibleName || 'N/A'}</div>
+                            <div><span class="font-semibold">Total Gasto:</span> R$ ${totalSpent.toFixed(2)}</div>
+                            <div><span class="font-semibold">Saldo Atual:</span> <span class="${balanceClass}">R$ ${customer.balance.toFixed(2)}</span></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div><h4 class="font-semibold text-md">Histórico de Compras:</h4>${purchasesHtml}</div>
+                            <div><h4 class="font-semibold text-md">Histórico de Recargas:</h4>${balanceLogHtml}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- LISTENERS DO FIRESTORE ---
+        function setupDataListeners() {
+            dataUnsubscribes.forEach(unsub => unsub());
+            dataUnsubscribes = [];
+
+            const unsubProducts = onSnapshot(dbCollections.products, (snapshot) => {
+                products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderProductsTable();
+                renderProductsPDV();
+                renderCategoryFilters();
+            }, (error) => console.error("Products listener error:", error));
+
+            const unsubCustomers = onSnapshot(dbCollections.customers, (snapshot) => {
+                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCustomersTable();
+                renderCustomersSelect();
+                if(currentView === 'customer-reports') renderCustomerReports();
+            }, (error) => console.error("Customers listener error:", error));
+            
+            const unsubTransactions = onSnapshot(query(dbCollections.transactions), (snapshot) => {
+                allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if(currentView === 'customer-reports') renderCustomerReports();
+                if(currentView === 'dashboard') renderDashboard();
+            }, (error) => console.error("All Transactions listener error:", error));
+
+             const unsubBalanceLogs = onSnapshot(query(dbCollections.balance_logs), (snapshot) => {
+                balanceLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if(currentView === 'customer-reports') renderCustomerReports();
+            }, (error) => console.error("Balance Logs listener error:", error));
+            
+            const unsubCategories = onSnapshot(dbCollections.categories, (snapshot) => {
+                categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCategoryOptions('product-category');
+                renderCategoryFilters();
+            }, (error) => console.error("Categories listener error:", error));
+            
+            dataUnsubscribes.push(unsubProducts, unsubCustomers, unsubTransactions, unsubBalanceLogs, unsubCategories);
+            setupTransactionsListener();
+        }
+        
+        function setupTransactionsListener() {
+            if (dataUnsubscribes.length > 5) {
+                const oldUnsub = dataUnsubscribes.pop();
+                oldUnsub();
+            }
+            
+            const reportDateStartInput = document.getElementById('report-date-start');
+            const reportDateEndInput = document.getElementById('report-date-end');
+            if (!reportDateStartInput || !reportDateEndInput) return;
+
+            const startDate = new Date(reportDateStartInput.value + 'T00:00:00');
+            const endDate = new Date(reportDateEndInput.value + 'T23:59:59');
+
+            if (isNaN(startDate) || isNaN(endDate)) return;
+
+            const startOfDay = Timestamp.fromDate(startDate);
+            const endOfDay = Timestamp.fromDate(endDate);
+
+            const q = query(dbCollections.transactions, where("createdAt", ">=", startOfDay), where("createdAt", "<=", endOfDay));
+            const transactionsUnsubscribe = onSnapshot(q, (snapshot) => {
+                transactionsForReport = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTransactionsTable();
+            }, (error) => console.error("Transactions listener error:", error));
+            dataUnsubscribes.push(transactionsUnsubscribe);
+        }
+
+        // --- LÓGICA DE NEGÓCIO ---
+        async function addOrUpdateProduct(productData, id = null) {
+            try {
+                if (id) {
+                    await updateDoc(doc(dbCollections.products, id), productData);
+                } else {
+                    await addDoc(dbCollections.products, productData);
+                }
+            } catch (e) {
+                console.error("Error saving product: ", e);
+                showSimpleMessage("Erro", "Não foi possível salvar as informações do produto.");
+            }
+        }
+        
+        async function deleteProduct(id) {
+            await deleteDoc(doc(dbCollections.products, id));
+        }
+        
+        async function addCustomer(customerData) {
+            const { name, phone, responsibleName, balance, creditLimit, paymentMethod } = customerData;
+            const batch = writeBatch(db);
+            
+            const newCustomerRef = doc(dbCollections.customers);
+            batch.set(newCustomerRef, { name, phone, responsibleName, balance, creditLimit });
+
+            if (balance > 0) {
+                const logRef = doc(dbCollections.balance_logs);
+                batch.set(logRef, {
+                    customerId: newCustomerRef.id,
+                    amount: balance,
+                    paymentMethod: paymentMethod,
+                    createdAt: Timestamp.now()
+                });
+            }
+            
+            await batch.commit();
+            return newCustomerRef;
+        }
+        
+        async function deleteCustomer(id) {
+            await deleteDoc(doc(dbCollections.customers, id));
+        }
+        
+        async function addBalance(customerId, amount, paymentMethod) {
+            const customerRef = doc(dbCollections.customers, customerId);
+            const customer = customers.find(c => c.id === customerId);
+            const newBalance = customer.balance + amount;
+            
+            const batch = writeBatch(db);
+            batch.update(customerRef, { balance: newBalance });
+            batch.set(doc(dbCollections.balance_logs), {
+                customerId,
+                amount,
+                paymentMethod,
+                createdAt: Timestamp.now()
+            });
+            await batch.commit();
+        }
+
+        async function finalizeSale() {
+            const customerId = document.getElementById('customer-select').value;
+            if ((selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois') && !customerId) {
+                showSimpleMessage('Atenção', 'Selecione um cliente para usar Saldo ou Pagar Depois.');
+                return;
+            }
+            if (currentOrder.length === 0) { showSimpleMessage('Atenção', 'O pedido está vazio.'); return; }
+            if (!selectedPaymentMethod) { showSimpleMessage('Atenção', 'Selecione uma forma de pagamento.'); return; }
+
+            const customer = customers.find(c => c.id === customerId);
+            const itemsSummary = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
+            let total = 0;
+            const transactionItems = [];
+            const stockUpdates = {};
+
+            for (const id in itemsSummary) {
+                const product = products.find(p => p.id === id);
+                const quantity = itemsSummary[id];
+                total += product.price * quantity;
+                transactionItems.push({ productId: id, name: product.name, price: product.price, quantity });
+                stockUpdates[id] = product.availableStock - quantity;
+            }
+
+            if (customer && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
+                const newBalance = customer.balance - total;
+                if (newBalance < customer.creditLimit) {
+                    const exceededAmount = Math.abs(newBalance - customer.creditLimit);
+                    showSimpleMessage('Limite de Crédito Excedido', `Esta compra excede o limite de R$ ${Math.abs(customer.creditLimit).toFixed(2)} em R$ ${exceededAmount.toFixed(2)}.`);
+                    return;
+                }
+            }
+
+            try {
+                const batch = writeBatch(db);
+                const saleDate = new Date(document.getElementById('sale-date').value + 'T' + new Date().toTimeString().split(' ')[0]);
+
+                batch.set(doc(dbCollections.transactions), {
+                    customerId: customerId || null,
+                    customerName: customer ? customer.name : 'Avulso',
+                    items: transactionItems,
+                    total,
+                    paymentMethod: selectedPaymentMethod,
+                    createdAt: Timestamp.fromDate(saleDate)
+                });
+
+                for (const id in stockUpdates) {
+                    batch.update(doc(dbCollections.products, id), { availableStock: stockUpdates[id] });
+                }
+
+                if (customerId && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
+                    const newBalance = customer.balance - total;
+                    batch.update(doc(dbCollections.customers, customerId), { balance: newBalance });
+                }
+
+                await batch.commit();
+                showSimpleMessage('Sucesso!', 'Venda finalizada com sucesso!');
+                currentOrder = [];
+                renderCurrentOrder();
+            } catch (e) {
+                console.error("Error finalizing sale: ", e);
+                showSimpleMessage('Erro', 'Ocorreu um erro ao finalizar a venda.');
+            }
+        }
+        
+        async function cancelSale(transactionId) {
+            const transaction = allTransactions.find(t => t.id === transactionId);
+            if (!transaction) {
+                showSimpleMessage('Erro', 'Transação não encontrada.');
+                return;
+            }
+
+            const batch = writeBatch(db);
+
+            // 1. Devolver estoque
+            transaction.items.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    const productRef = doc(dbCollections.products, item.productId);
+                    batch.update(productRef, { availableStock: product.availableStock + item.quantity });
+                }
+            });
+
+            // 2. Devolver saldo/crédito ao cliente
+            if (transaction.customerId && (transaction.paymentMethod === 'Saldo' || transaction.paymentMethod === 'Pagar Depois')) {
+                const customer = customers.find(c => c.id === transaction.customerId);
+                if (customer) {
+                    const customerRef = doc(dbCollections.customers, transaction.customerId);
+                    batch.update(customerRef, { balance: customer.balance + transaction.total });
+                }
+            }
+
+            // 3. Excluir a transação
+            const transactionRef = doc(dbCollections.transactions, transactionId);
+            batch.delete(transactionRef);
+
+            try {
+                await batch.commit();
+                showSimpleMessage('Sucesso', 'Venda cancelada com sucesso!');
+            } catch (e) {
+                console.error("Error cancelling sale: ", e);
+                showSimpleMessage('Erro', 'Não foi possível cancelar a venda.');
+            }
+        }
+
+        async function addCategory(name) {
+            try {
+                await addDoc(dbCollections.categories, { name });
+            } catch (e) {
+                console.error("Error adding category: ", e);
+                showSimpleMessage("Erro", "Não foi possível adicionar a categoria.");
+            }
+        }
+
+        // --- LÓGICA DE EXPORTAÇÃO ---
+        function exportToCSV(headers, rows, filename) {
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+            
+            rows.forEach(rowArray => {
+                let row = rowArray.map(field => (typeof field === 'string' && field.includes(',')) ? `"${field}"` : field).join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleExportProducts() {
+            const headers = ["ID", "Nome", "Categoria", "PrecoCusto", "PrecoVenda", "EstoqueTotal", "EstoqueDisponivel"];
+            const rows = products.map(p => [p.id, p.name, p.category, p.costPrice, p.price, p.totalStock, p.availableStock]);
+            exportToCSV(headers, rows, "produtos.csv");
+        }
+
+        function handleExportCustomers() {
+            const headers = ["ID", "Nome", "Telefone", "Responsavel", "Saldo", "LimiteCredito"];
+            const rows = customers.map(c => [c.id, c.name, c.phone, c.responsibleName || '', c.balance, c.creditLimit]);
+            exportToCSV(headers, rows, "clientes.csv");
+        }
+
+        function handleExportSales() {
+            const headers = ["Data", "Cliente", "Itens", "Total", "Lucro", "Pagamento"];
+            const rows = transactionsForReport.map(tx => {
+                const date = tx.createdAt.toDate().toLocaleString('pt-BR');
+                const items = tx.items.map(i => `${i.quantity}x ${i.name}`).join('; ');
+                let profit = 0;
+                tx.items.forEach(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    if (product && product.costPrice) profit += (item.price - product.costPrice) * item.quantity;
+                });
+                return [date, tx.customerName, items, tx.total, profit.toFixed(2), tx.paymentMethod];
+            });
+            exportToCSV(headers, rows, `relatorio_vendas_${document.getElementById('report-date-start').value}_a_${document.getElementById('report-date-end').value}.csv`);
+        }
+
+        function handleExportCustomerReports() {
+            const headers = ["ID", "Nome", "Telefone", "Responsavel", "SaldoAtual", "TotalGasto"];
+            const rows = customers.map(c => {
+                const totalSpent = allTransactions
+                    .filter(t => t.customerId === c.id)
+                    .reduce((sum, t) => sum + t.total, 0);
+                return [c.id, c.name, c.phone, c.responsibleName || '', c.balance, totalSpent];
+            });
+            exportToCSV(headers, rows, "relatorio_clientes.csv");
+        }
+
+        // --- MODAL HANDLERS ---
+        function showEditProductModal(productId) {
+            const product = products.find(p => p.id === productId);
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium">Editar Produto</h3>
+                    <div class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border rounded-md p-2"></select></div>
+                        <div><label class="block text-sm">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.costPrice || 0}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.availableStock}" class="mt-1 block w-full border rounded-md p-2"></div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="edit-product-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="save-product-changes" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                    </div>
+                </div>`;
+            showModal('edit-product-modal', content);
+            renderCategoryOptions('edit-product-category', product.category);
+            document.getElementById('edit-product-cancel-btn').onclick = () => closeModal('edit-product-modal');
+            document.getElementById('save-product-changes').onclick = () => {
+                const updatedData = {
+                    name: document.getElementById('edit-product-name').value,
+                    category: document.getElementById('edit-product-category').value,
+                    costPrice: parseFloat(document.getElementById('edit-product-cost-price').value),
+                    price: parseFloat(document.getElementById('edit-product-price').value),
+                    availableStock: parseInt(document.getElementById('edit-product-available-stock').value)
+                };
+                addOrUpdateProduct(updatedData, productId);
+                closeModal('edit-product-modal');
+            };
+        }
+        
+        function showAddBalanceModal(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Saldo para ${customer.name}</h3>
+                    <div class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Forma de Pagamento</label><select id="add-balance-payment-method" class="mt-1 block w-full border rounded-md p-2"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="add-balance-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="save-balance-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Adicionar</button>
+                    </div>
+                </div>`;
+            showModal('add-balance-modal', content);
+            document.getElementById('add-balance-cancel-btn').onclick = () => closeModal('add-balance-modal');
+            document.getElementById('save-balance-btn').onclick = () => {
+                const amount = parseFloat(document.getElementById('add-balance-amount').value);
+                const method = document.getElementById('add-balance-payment-method').value;
+                if (amount > 0) {
+                    addBalance(customerId, amount, method);
+                    closeModal('add-balance-modal');
+                } else {
+                    showSimpleMessage('Valor Inválido', 'Insira um valor válido.');
+                }
+            };
+        }
+        
+        function showAddCustomerModal(callback) {
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Novo Cliente</h3>
+                    <form id="modal-add-customer-form" class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Nome Completo*</label><input type="text" id="modal-customer-name" required class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Telefone*</label><input type="tel" id="modal-customer-phone" required class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Limite de Crédito (Ex: 50 para R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="mt-1 block w-full border rounded-md p-2"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" id="add-customer-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
+                            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar Cliente</button>
+                        </div>
+                    </form>
+                </div>`;
+            showModal('add-customer-modal', content);
+
+            document.getElementById('add-customer-cancel-btn').onclick = () => closeModal('add-customer-modal');
+            const balanceInput = document.getElementById('modal-customer-balance');
+            const paymentDiv = document.getElementById('modal-payment-method-div');
+            balanceInput.oninput = () => {
+                paymentDiv.classList.toggle('hidden', parseFloat(balanceInput.value) <= 0);
+            };
+
+            document.getElementById('modal-add-customer-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const phone = document.getElementById('modal-customer-phone').value;
+                if (!phone) {
+                    showSimpleMessage('Erro', 'O campo Telefone é obrigatório.');
+                    return;
+                }
+                const customerData = {
+                    name: document.getElementById('modal-customer-name').value,
+                    phone: phone,
+                    responsibleName: document.getElementById('modal-customer-responsible').value,
+                    balance: parseFloat(balanceInput.value) || 0,
+                    creditLimit: -Math.abs(parseFloat(document.getElementById('modal-customer-limit').value)) || 0,
+                    paymentMethod: document.getElementById('modal-balance-payment-method').value
+                };
+                const newCustomerRef = await addCustomer(customerData);
+                closeModal('add-customer-modal');
+                if (callback) callback(newCustomerRef.id);
+            };
+        }
+
+        function showAddCategoryModal() {
+            const content = `
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Nova Categoria</h3>
+                    <div class="mt-4">
+                        <label class="block text-sm">Nome da Categoria</label>
+                        <input id="new-category-name" type="text" class="mt-1 block w-full border rounded-md p-2">
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="add-category-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="add-category-save-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                    </div>
+                </div>`;
+            showModal('add-category-modal', content);
+            document.getElementById('add-category-cancel-btn').onclick = () => closeModal('add-category-modal');
+            document.getElementById('add-category-save-btn').onclick = () => {
+                const name = document.getElementById('new-category-name').value;
+                if (name) {
+                    addCategory(name);
+                    closeModal('add-category-modal');
+                } else {
+                    showSimpleMessage('Erro', 'O nome da categoria não pode ser vazio.');
+                }
+            };
+        }
+
+        // --- CARREGAMENTO DO HTML E EVENTOS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppLogic();
+            
+            // Navegação
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const viewId = link.id.replace('nav-', '');
+                link.addEventListener('click', (e) => { e.preventDefault(); showView(viewId); });
+            });
+
+            // Forms e Botões
+            document.getElementById('add-product-form').onsubmit = (e) => {
+                e.preventDefault();
+                const initialStock = parseInt(document.getElementById('product-initial-stock').value);
+                const data = {
+                    name: document.getElementById('product-name').value,
+                    category: document.getElementById('product-category').value || 'Geral',
+                    costPrice: parseFloat(document.getElementById('product-cost-price').value) || 0,
+                    price: parseFloat(document.getElementById('product-price').value),
+                    totalStock: initialStock,
+                    availableStock: initialStock
+                };
+                addOrUpdateProduct(data);
+                e.target.reset();
+            };
+            
+            document.getElementById('add-customer-view-btn').onclick = () => showAddCustomerModal();
+            document.getElementById('add-customer-pdv-btn').onclick = () => {
+                showAddCustomerModal((newId) => {
+                    setTimeout(() => { document.getElementById('customer-select').value = newId; }, 500);
+                });
+            };
+
+            document.getElementById('add-category-btn').onclick = showAddCategoryModal;
+            document.getElementById('export-products-btn').onclick = handleExportProducts;
+            document.getElementById('export-customers-btn').onclick = handleExportCustomers;
+            document.getElementById('export-sales-report-btn').onclick = handleExportSales;
+            document.getElementById('export-customer-report-btn').onclick = handleExportCustomerReports;
+
+            // Delegação de Eventos
+            document.getElementById('main-content').addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('delete-product-btn')) {
+                    showConfirmModal('Excluir Produto?', 'Esta ação não pode ser desfeita.', () => deleteProduct(target.dataset.id));
+                }
+                if (target.classList.contains('edit-product-btn')) {
+                    showEditProductModal(target.dataset.id);
+                }
+                if (target.classList.contains('delete-customer-btn')) {
+                    showConfirmModal('Excluir Cliente?', 'Todas as dívidas e saldos serão perdidos.', () => deleteCustomer(target.dataset.id));
+                }
+                if (target.classList.contains('add-balance-btn')) {
+                    showAddBalanceModal(target.dataset.id);
+                }
+                 if (target.classList.contains('remove-from-cart-btn')) {
+                    const productIdToRemove = target.dataset.id;
+                    const index = currentOrder.indexOf(productIdToRemove);
+                    if (index > -1) {
+                        currentOrder.splice(index, 1);
+                        renderCurrentOrder();
+                    }
+                }
+                 if (target.classList.contains('cancel-sale-btn')) {
+                    showConfirmModal('Cancelar Venda?', 'O estoque será devolvido e o saldo do cliente estornado. Esta ação não pode ser desfeita.', () => cancelSale(target.dataset.id));
+                }
+                if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('disabled')) {
+                    const card = target.closest('.product-card');
+                    const productId = card.dataset.id;
+                    const product = products.find(p => p.id === productId);
+                    const itemsInCart = currentOrder.filter(id => id === productId).length;
+                    
+                    if (itemsInCart < product.availableStock) {
+                        currentOrder.push(productId);
+                        renderCurrentOrder();
+                    } else {
+                        showSimpleMessage('Limite Atingido', 'Não há mais unidades deste produto no estoque disponível.');
+                    }
+                }
+                if (target.classList.contains('payment-btn')) {
+                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.replace('bg-indigo-600', 'bg-gray-200'));
+                    target.classList.replace('bg-gray-200', 'bg-indigo-600');
+                    selectedPaymentMethod = target.dataset.method;
+                }
+                if (target.classList.contains('category-btn')) {
+                    filterProductsByCategory(target.dataset.category);
+                }
+            });
+            
+            // Finalizar Venda
+            document.getElementById('finalize-sale-btn').onclick = finalizeSale;
+            
+            // Filtros de Data
+            document.getElementById('report-date-start').onchange = setupTransactionsListener;
+            document.getElementById('report-date-end').onchange = setupTransactionsListener;
+        });
+    </script>
+</body>
+</html>
