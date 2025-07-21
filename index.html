@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cantina da Igreja v3.0 - Offline</title>
+    <title>Cantina da Igreja v2.7 (Supabase)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- **NOVO**: Importa a biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .nav-link { transition: all 0.2s ease-in-out; }
@@ -28,9 +30,8 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Container Principal da Aplicação -->
+    <!-- O HTML da interface continua o mesmo -->
     <div id="app-container" class="max-w-7xl mx-auto p-4">
-        <!-- Cabeçalho e Navegação -->
         <header class="bg-white rounded-lg shadow p-4 mb-6">
             <div class="flex justify-between items-start">
                 <div>
@@ -55,33 +56,28 @@
         </header>
 
         <main id="main-content">
-            <!-- Tela de Carregamento -->
             <div id="loading-view" class="text-center p-10">
-                <p class="text-lg text-gray-600">Conectando ao sistema e carregando dados locais...</p>
+                <p class="text-lg text-gray-600">Conectando ao banco de dados...</p>
             </div>
-            
-            <!-- Seção Dashboard -->
             <div id="dashboard-view" class="hidden">
                  <h2 class="text-2xl font-semibold mb-4">Painel de Controle (Hoje)</h2>
-                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                     <div class="bg-white p-6 rounded-lg shadow">
-                         <h3 class="text-lg font-medium text-gray-500">Vendas Totais do Dia</h3>
-                         <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
-                     </div>
-                     <div class="bg-white p-6 rounded-lg shadow">
-                         <h3 class="text-lg font-medium text-gray-500">Produtos Mais Vendidos</h3>
-                         <ul id="dashboard-top-products" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
-                     </div>
-                     <div class="bg-white p-6 rounded-lg shadow">
-                         <h3 class="text-lg font-medium text-gray-500">Últimas Transações</h3>
-                         <ul id="dashboard-recent-transactions" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
-                     </div>
-                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-medium text-gray-500">Vendas Totais do Dia</h3>
+                        <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-medium text-gray-500">Produtos Mais Vendidos</h3>
+                        <ul id="dashboard-top-products" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-medium text-gray-500">Últimas Transações</h3>
+                        <ul id="dashboard-recent-transactions" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
+                    </div>
+                </div>
             </div>
-
-            <!-- Seção PDV (Ponto de Venda) -->
             <div id="pdv-view" class="hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-semibold">Selecione os Produtos</h2>
@@ -118,10 +114,8 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Seção de Produtos -->
             <div id="products-view" class="hidden bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
+                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold">Gerenciar Produtos</h2>
                     <div class="flex gap-2">
                         <button id="add-category-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Categoria</button>
@@ -166,15 +160,13 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Seção de Clientes -->
             <div id="customers-view" class="hidden bg-white p-6 rounded-lg shadow">
                  <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold">Gerenciar Clientes</h2>
                     <button id="export-customers-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
                 </div>
-                 <button id="add-customer-view-btn" class="mb-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Adicionar Novo Cliente</button>
-                 <div class="overflow-x-auto">
+                <button id="add-customer-view-btn" class="mb-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Adicionar Novo Cliente</button>
+                <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -188,10 +180,8 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Seção de Relatórios de Vendas -->
             <div id="reports-view" class="hidden bg-white p-6 rounded-lg shadow">
-                 <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold">Relatório de Vendas</h2>
                     <div class="flex items-center gap-4">
                         <div>
@@ -210,7 +200,7 @@
                     <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Vendas</h4><p id="period-transactions" class="text-xl font-bold">0</p></div>
                     <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold">0</p></div>
                 </div>
-                 <div class="bg-white p-4 rounded-lg shadow-inner mb-6">
+                <div class="bg-white p-4 rounded-lg shadow-inner mb-6">
                     <h3 class="text-lg font-semibold mb-2">Fechamento de Caixa</h3>
                     <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
                 </div>
@@ -234,14 +224,12 @@
                     </table>
                 </div>
             </div>
-            
-            <!-- Seção de Relatórios de Clientes -->
             <div id="customer-reports-view" class="hidden bg-white p-6 rounded-lg shadow">
                  <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-semibold">Relatório de Clientes</h2>
                     <button id="export-customer-report-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
                 </div>
-                 <div id="customer-report-container" class="space-y-6">
+                <div id="customer-report-container" class="space-y-6">
                 </div>
             </div>
         </main>
@@ -257,19 +245,12 @@
 
 
     <script type="module">
-        // Importações do Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // Corrigida a importação para a função de persistência offline
-        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, writeBatch, query, where, Timestamp, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- CONFIGURAÇÃO INICIAL DO SUPABASE ---
+        const SUPABASE_URL = 'https://tajxtakefalzlrizkpqq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhanh0YWtlZmFsemxyaXprcHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjAzNjEsImV4cCI6MjA2ODQzNjM2MX0.belYo84KUtRMzhGlq4TZ5P3MXbQXQbLqhJ3A9CzqPGI';
 
-        // --- CONFIGURAÇÃO INICIAL ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'canteen-app-default';
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- VARIÁVEIS GLOBAIS E ESTADO DA APLICAÇÃO ---
         let currentView = 'dashboard';
@@ -280,56 +261,21 @@
         let allTransactions = [];
         let transactionsForReport = [];
         let balanceLogs = [];
-        let dbCollections = {};
         let onConfirmCallback = null;
         let selectedPaymentMethod = null;
-        let dataUnsubscribes = [];
         const LOW_STOCK_THRESHOLD = 5;
+        let realTimeSubscriptions = [];
 
-        // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) { // Usuário logado
-                document.getElementById('loading-view').classList.add('hidden');
-                
-                dbCollections = {
-                    products: collection(db, `artifacts/${appId}/users/${user.uid}/products`),
-                    customers: collection(db, `artifacts/${appId}/users/${user.uid}/customers`),
-                    transactions: collection(db, `artifacts/${appId}/users/${user.uid}/transactions`),
-                    balance_logs: collection(db, `artifacts/${appId}/users/${user.uid}/balance_logs`),
-                    categories: collection(db, `artifacts/${appId}/users/${user.uid}/categories`),
-                };
-                
-                setupDataListeners();
-                setInitialDate();
-                showView('dashboard');
+        // --- LÓGICA DE INICIALIZAÇÃO ---
+        function initializeAppLogic() {
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('COLE')) {
+                 showSimpleMessage("Configuração Necessária", "Por favor, preencha a SUPABASE_URL e a SUPABASE_ANON_KEY no código HTML para conectar ao banco de dados.");
+                 return;
             }
-        });
-
-        async function initializeAppLogic() {
-            // Ativar a persistência offline ANTES de qualquer outra operação do Firestore
-            try {
-                // Corrigido para enableIndexedDbPersistence
-                await enableIndexedDbPersistence(db);
-                console.log("Persistência offline ativada com sucesso.");
-            } catch (err) {
-                if (err.code == 'failed-precondition') {
-                    console.warn("Falha ao ativar persistência offline: Múltiplas abas abertas podem causar isso.");
-                } else if (err.code == 'unimplemented') {
-                    console.warn("O navegador atual não suporta a persistência offline.");
-                }
-            }
-
-            // Após tentar ativar a persistência, continua com a autenticação
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication failed:", error);
-                showSimpleMessage("Erro de Conexão", "Não foi possível conectar ao serviço. Verifique a configuração do Firebase e se o método de autenticação está ativado.");
-            }
+            document.getElementById('loading-view').classList.add('hidden');
+            setupDataListeners();
+            setInitialDate();
+            showView('dashboard');
         }
 
         // --- FUNÇÕES DE NAVEGAÇÃO E UI ---
@@ -344,7 +290,7 @@
 
             currentView = viewId;
             if (viewId === 'dashboard') renderDashboard();
-            if (viewId === 'reports') setupTransactionsListener();
+            if (viewId === 'reports') renderTransactionsTable();
             if (viewId === 'customer-reports') renderCustomerReports();
         }
         
@@ -391,8 +337,7 @@
             };
             document.getElementById('confirm-modal-cancel-btn').onclick = () => closeModal('confirm-modal');
         }
-
-        // --- LÓGICA DE INICIALIZAÇÃO ---
+        
         function setInitialDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('sale-date').value = today;
@@ -406,13 +351,11 @@
         function renderDashboard() {
             const today = new Date();
             today.setHours(0,0,0,0);
-            const todaysTransactions = allTransactions.filter(t => t.createdAt.toDate() >= today);
+            const todaysTransactions = allTransactions.filter(t => new Date(t.created_at) >= today);
 
-            // Total de Vendas
-            const totalSales = todaysTransactions.reduce((sum, t) => sum + t.total, 0);
+            const totalSales = todaysTransactions.reduce((sum, t) => sum + Number(t.total), 0);
             document.getElementById('dashboard-total-sales').textContent = `R$ ${totalSales.toFixed(2)}`;
 
-            // Produtos mais vendidos
             const productCounts = todaysTransactions.flatMap(t => t.items).reduce((acc, item) => {
                 acc[item.name] = (acc[item.name] || 0) + item.quantity;
                 return acc;
@@ -421,10 +364,9 @@
             const topProductsList = document.getElementById('dashboard-top-products');
             topProductsList.innerHTML = topProducts.map(p => `<li><span class="font-semibold">${p[1]}x</span> ${p[0]}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
 
-            // Últimas transações
-            const recentTransactions = todaysTransactions.sort((a,b) => b.createdAt.toMillis() - a.createdAt.toMillis()).slice(0, 5);
+            const recentTransactions = todaysTransactions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
             const recentTransactionsList = document.getElementById('dashboard-recent-transactions');
-            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li>${t.customerName} - R$ ${t.total.toFixed(2)}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
+            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li>${t.customer_name} - R$ ${Number(t.total).toFixed(2)}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
         }
         
         function renderCategoryOptions(selectElementId, selectedCategory = null) {
@@ -458,13 +400,13 @@
             if (!tableBody) return;
             tableBody.innerHTML = '';
             products.forEach(p => {
-                const stockClass = p.availableStock <= LOW_STOCK_THRESHOLD ? 'low-stock' : '';
+                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : '';
                 tableBody.innerHTML += `
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.name}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.category}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${p.price.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${stockClass}">${p.availableStock}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${Number(p.price).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${stockClass}">${p.available_stock}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button data-id="${p.id}" class="edit-product-btn text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
                             <button data-id="${p.id}" class="delete-product-btn text-red-600 hover:text-red-900">Excluir</button>
@@ -478,13 +420,13 @@
             if (!container) return;
             container.innerHTML = '';
             productsToRender.forEach(p => {
-                const disabled = p.availableStock <= 0 ? 'disabled' : '';
-                const stockClass = p.availableStock <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'text-blue-600';
+                const disabled = p.available_stock <= 0 ? 'disabled' : '';
+                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'text-blue-600';
                 container.innerHTML += `
                     <div class="product-card cursor-pointer bg-gray-50 border rounded-lg p-3 text-center hover:bg-indigo-100 hover:border-indigo-500 ${disabled}" data-id="${p.id}">
                         <p class="font-semibold text-sm">${p.name}</p>
-                        <p class="text-xs text-gray-600">R$ ${p.price.toFixed(2)}</p>
-                        <p class="text-xs ${stockClass}">Estoque: ${p.availableStock}</p>
+                        <p class="text-xs text-gray-600">R$ ${Number(p.price).toFixed(2)}</p>
+                        <p class="text-xs ${stockClass}">Estoque: ${p.available_stock}</p>
                     </div>`;
             });
         }
@@ -499,7 +441,7 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${c.name}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${c.phone}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm ${balanceClass}">R$ ${c.balance.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${balanceClass}">R$ ${Number(c.balance).toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button data-id="${c.id}" class="add-balance-btn text-green-600 hover:text-green-900 mr-3">Adicionar Saldo</button>
                             <button data-id="${c.id}" class="delete-customer-btn text-red-600 hover:text-red-900">Excluir</button>
@@ -513,7 +455,7 @@
             if (!select) return;
             select.innerHTML = '<option value="">Cliente Avulso</option>';
             customers.forEach(c => {
-                select.innerHTML += `<option value="${c.id}">${c.name} (Saldo: R$ ${c.balance.toFixed(2)})</option>`;
+                select.innerHTML += `<option value="${c.id}">${c.name} (Saldo: R$ ${Number(c.balance).toFixed(2)})</option>`;
             });
         }
 
@@ -548,7 +490,9 @@
             totalEl.textContent = `R$ ${total.toFixed(2)}`;
         }
 
-        function renderTransactionsTable() {
+        async function renderTransactionsTable() {
+            await fetchTransactionsForReport(); 
+
             const tableBody = document.getElementById('transactions-list-table');
             const periodTotalEl = document.getElementById('period-total');
             const periodProfitEl = document.getElementById('period-profit');
@@ -564,34 +508,34 @@
             const cashClosing = {};
 
             transactionsForReport.forEach(tx => {
-                const txDate = tx.createdAt.toDate();
+                const txDate = new Date(tx.created_at);
                 const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
                 let transactionProfit = 0;
                 tx.items.forEach(item => {
                     const product = products.find(p => p.id === item.productId);
-                    if (product && product.costPrice) {
-                        transactionProfit += (item.price - product.costPrice) * item.quantity;
+                    if (product && product.cost_price) {
+                        transactionProfit += (item.price - product.cost_price) * item.quantity;
                     }
                 });
                 
                 tableBody.innerHTML += `
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${txDate.toLocaleString('pt-BR')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tx.customerName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tx.customer_name}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${itemsStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tx.paymentMethod}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tx.payment_method}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">R$ ${transactionProfit.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${tx.total.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${Number(tx.total).toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 hover:text-red-900">Cancelar</button>
                         </td>
                     </tr>`;
-                periodTotal += tx.total;
+                periodTotal += Number(tx.total);
                 periodProfit += transactionProfit;
                 periodItems += tx.items.reduce((sum, item) => sum + item.quantity, 0);
 
-                if (tx.paymentMethod !== 'Saldo' && tx.paymentMethod !== 'Pagar Depois') {
-                    cashClosing[tx.paymentMethod] = (cashClosing[tx.paymentMethod] || 0) + tx.total;
+                if (tx.payment_method !== 'Saldo' && tx.payment_method !== 'Pagar Depois') {
+                    cashClosing[tx.payment_method] = (cashClosing[tx.payment_method] || 0) + Number(tx.total);
                 }
             });
             periodTotalEl.textContent = `R$ ${periodTotal.toFixed(2)}`;
@@ -609,9 +553,9 @@
             if (!container) return;
             container.innerHTML = '';
             customers.forEach(customer => {
-                const customerTransactions = allTransactions.filter(t => t.customerId === customer.id);
-                const customerBalanceLogs = balanceLogs.filter(l => l.customerId === customer.id);
-                const totalSpent = customerTransactions.reduce((sum, t) => sum + t.total, 0);
+                const customerTransactions = allTransactions.filter(t => t.customer_id === customer.id);
+                const customerBalanceLogs = balanceLogs.filter(l => l.customer_id === customer.id);
+                const totalSpent = customerTransactions.reduce((sum, t) => sum + Number(t.total), 0);
                 const balanceClass = customer.balance < 0 ? 'text-red-600' : 'text-green-600';
 
                 let purchasesHtml = '<p class="text-sm text-gray-500">Nenhuma compra registrada.</p>';
@@ -619,7 +563,7 @@
                     purchasesHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
                     customerTransactions.forEach(tx => {
                         tx.items.forEach(item => {
-                            purchasesHtml += `<li class="text-sm text-gray-700">${item.quantity}x ${item.name} - R$ ${item.price.toFixed(2)} (em ${tx.createdAt.toDate().toLocaleDateString()})</li>`;
+                            purchasesHtml += `<li class="text-sm text-gray-700">${item.quantity}x ${item.name} - R$ ${Number(item.price).toFixed(2)} (em ${new Date(tx.created_at).toLocaleDateString()})</li>`;
                         });
                     });
                     purchasesHtml += '</ul>';
@@ -629,7 +573,7 @@
                  if (customerBalanceLogs.length > 0) {
                     balanceLogHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
                     customerBalanceLogs.forEach(log => {
-                        balanceLogHtml += `<li class="text-sm text-gray-700">+ R$ ${log.amount.toFixed(2)} (${log.paymentMethod}) em ${log.createdAt.toDate().toLocaleDateString()}</li>`;
+                        balanceLogHtml += `<li class="text-sm text-gray-700">+ R$ ${Number(log.amount).toFixed(2)} (${log.payment_method}) em ${new Date(log.created_at).toLocaleDateString()}</li>`;
                     });
                     balanceLogHtml += '</ul>';
                 }
@@ -639,9 +583,9 @@
                         <h3 class="text-lg font-bold text-indigo-700">${customer.name}</h3>
                         <div class="grid grid-cols-2 gap-4 mt-2 text-sm">
                             <div><span class="font-semibold">Telefone:</span> ${customer.phone}</div>
-                            <div><span class="font-semibold">Responsável:</span> ${customer.responsibleName || 'N/A'}</div>
+                            <div><span class="font-semibold">Responsável:</span> ${customer.responsible_name || 'N/A'}</div>
                             <div><span class="font-semibold">Total Gasto:</span> R$ ${totalSpent.toFixed(2)}</div>
-                            <div><span class="font-semibold">Saldo Atual:</span> <span class="${balanceClass}">R$ ${customer.balance.toFixed(2)}</span></div>
+                            <div><span class="font-semibold">Saldo Atual:</span> <span class="${balanceClass}">R$ ${Number(customer.balance).toFixed(2)}</span></div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div><h4 class="font-semibold text-md">Histórico de Compras:</h4>${purchasesHtml}</div>
@@ -652,129 +596,198 @@
             });
         }
 
-        // --- LISTENERS DO FIRESTORE ---
-        function setupDataListeners() {
-            dataUnsubscribes.forEach(unsub => unsub());
-            dataUnsubscribes = [];
-
-            const unsubProducts = onSnapshot(dbCollections.products, (snapshot) => {
-                products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // --- LISTENERS DE DADOS DO SUPABASE ---
+        async function fetchAndRenderProducts() {
+            const { data, error } = await _supabase.from('products').select('*');
+            if (error) console.error('Erro ao buscar produtos:', error);
+            else {
+                products = data;
                 renderProductsTable();
                 renderProductsPDV();
-                renderCategoryFilters();
-            }, (error) => console.error("Products listener error:", error));
-
-            const unsubCustomers = onSnapshot(dbCollections.customers, (snapshot) => {
-                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+        };
+        async function fetchAndRenderCustomers() {
+            const { data, error } = await _supabase.from('customers').select('*');
+            if (error) console.error('Erro ao buscar clientes:', error);
+            else {
+                customers = data;
                 renderCustomersTable();
                 renderCustomersSelect();
                 if(currentView === 'customer-reports') renderCustomerReports();
-            }, (error) => console.error("Customers listener error:", error));
-            
-            const unsubTransactions = onSnapshot(query(dbCollections.transactions), (snapshot) => {
-                allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if(currentView === 'customer-reports') renderCustomerReports();
-                if(currentView === 'dashboard') renderDashboard();
-            }, (error) => console.error("All Transactions listener error:", error));
-
-             const unsubBalanceLogs = onSnapshot(query(dbCollections.balance_logs), (snapshot) => {
-                balanceLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if(currentView === 'customer-reports') renderCustomerReports();
-            }, (error) => console.error("Balance Logs listener error:", error));
-            
-            const unsubCategories = onSnapshot(dbCollections.categories, (snapshot) => {
-                categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+        };
+        async function fetchAndRenderCategories() {
+            const { data, error } = await _supabase.from('categories').select('*');
+            if (error) console.error('Erro ao buscar categorias:', error);
+            else {
+                categories = data;
                 renderCategoryOptions('product-category');
                 renderCategoryFilters();
-            }, (error) => console.error("Categories listener error:", error));
+            }
+        };
+        async function fetchAndRenderAllTransactions() {
+             const { data, error } = await _supabase.from('transactions').select('*');
+             if (error) console.error('Erro ao buscar todas as transações:', error);
+             else {
+                allTransactions = data;
+                if(currentView === 'customer-reports') renderCustomerReports();
+                if(currentView === 'dashboard') renderDashboard();
+             }
+        };
+        async function fetchAndRenderBalanceLogs() {
+             const { data, error } = await _supabase.from('balance_logs').select('*');
+             if (error) console.error('Erro ao buscar logs de saldo:', error);
+             else {
+                balanceLogs = data;
+                if(currentView === 'customer-reports') renderCustomerReports();
+             }
+        };
+
+        function setupDataListeners() {
+            realTimeSubscriptions.forEach(sub => _supabase.removeChannel(sub));
+            realTimeSubscriptions = [];
+
+            const createRealtimeSubscription = (table, callback) => {
+                const channel = _supabase.channel(`public:${table}`)
+                    .on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
+                        console.log(`Mudança detectada em ${table}:`, payload);
+                        callback();
+                    })
+                    .subscribe();
+                realTimeSubscriptions.push(channel);
+            };
             
-            dataUnsubscribes.push(unsubProducts, unsubCustomers, unsubTransactions, unsubBalanceLogs, unsubCategories);
-            setupTransactionsListener();
+            fetchAndRenderProducts();
+            fetchAndRenderCustomers();
+            fetchAndRenderCategories();
+            fetchAndRenderAllTransactions();
+            fetchAndRenderBalanceLogs();
+
+            createRealtimeSubscription('products', fetchAndRenderProducts);
+            createRealtimeSubscription('customers', fetchAndRenderCustomers);
+            createRealtimeSubscription('categories', fetchAndRenderCategories);
+            createRealtimeSubscription('transactions', fetchAndRenderAllTransactions);
+            createRealtimeSubscription('balance_logs', fetchAndRenderBalanceLogs);
         }
         
-        function setupTransactionsListener() {
-            if (dataUnsubscribes.length > 5) {
-                const oldUnsub = dataUnsubscribes.pop();
-                oldUnsub();
-            }
-            
+        async function fetchTransactionsForReport() {
             const reportDateStartInput = document.getElementById('report-date-start');
             const reportDateEndInput = document.getElementById('report-date-end');
             if (!reportDateStartInput || !reportDateEndInput) return;
 
-            const startDate = new Date(reportDateStartInput.value + 'T00:00:00');
-            const endDate = new Date(reportDateEndInput.value + 'T23:59:59');
+            const startDate = reportDateStartInput.value + 'T00:00:00';
+            const endDate = reportDateEndInput.value + 'T23:59:59';
 
-            if (isNaN(startDate) || isNaN(endDate)) return;
-
-            const startOfDay = Timestamp.fromDate(startDate);
-            const endOfDay = Timestamp.fromDate(endDate);
-
-            const q = query(dbCollections.transactions, where("createdAt", ">=", startOfDay), where("createdAt", "<=", endOfDay));
-            const transactionsUnsubscribe = onSnapshot(q, (snapshot) => {
-                transactionsForReport = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderTransactionsTable();
-            }, (error) => console.error("Transactions listener error:", error));
-            dataUnsubscribes.push(transactionsUnsubscribe);
+            const { data, error } = await _supabase.from('transactions')
+                .select('*')
+                .gte('created_at', startDate)
+                .lte('created_at', endDate);
+            
+            if (error) {
+                console.error("Erro ao buscar transações para o relatório:", error);
+                transactionsForReport = [];
+            } else {
+                transactionsForReport = data;
+            }
         }
 
-        // --- LÓGICA DE NEGÓCIO ---
+        // --- LÓGICA DE NEGÓCIO (Adaptada para Supabase) ---
         async function addOrUpdateProduct(productData, id = null) {
-            try {
-                if (id) {
-                    await updateDoc(doc(dbCollections.products, id), productData);
-                } else {
-                    await addDoc(dbCollections.products, productData);
-                }
-            } catch (e) {
-                console.error("Error saving product: ", e);
+            let response;
+            if (id) {
+                response = await _supabase.from('products').update(productData).eq('id', id);
+            } else {
+                response = await _supabase.from('products').insert([productData]);
+            }
+            if (response.error) {
+                console.error("Erro ao salvar produto:", response.error);
                 showSimpleMessage("Erro", "Não foi possível salvar as informações do produto.");
+            } else {
+                fetchAndRenderProducts();
             }
         }
         
         async function deleteProduct(id) {
-            await deleteDoc(doc(dbCollections.products, id));
+            const { error } = await _supabase.from('products').delete().eq('id', id);
+            if (error) {
+                console.error("Erro ao excluir produto:", error);
+            } else {
+                fetchAndRenderProducts();
+            }
         }
         
         async function addCustomer(customerData) {
             const { name, phone, responsibleName, balance, creditLimit, paymentMethod } = customerData;
-            const batch = writeBatch(db);
             
-            const newCustomerRef = doc(dbCollections.customers);
-            batch.set(newCustomerRef, { name, phone, responsibleName, balance, creditLimit });
+            const { data, error } = await _supabase.from('customers').insert([{ 
+                name, 
+                phone, 
+                responsible_name: responsibleName, 
+                balance, 
+                credit_limit: creditLimit 
+            }]).select().single();
 
-            if (balance > 0) {
-                const logRef = doc(dbCollections.balance_logs);
-                batch.set(logRef, {
-                    customerId: newCustomerRef.id,
-                    amount: balance,
-                    paymentMethod: paymentMethod,
-                    createdAt: Timestamp.now()
-                });
+            if (error) {
+                 console.error("Erro ao adicionar cliente:", error);
+                 return null;
             }
             
-            await batch.commit();
-            return newCustomerRef;
+            if (balance > 0) {
+                await _supabase.from('balance_logs').insert([{
+                    customer_id: data.id,
+                    amount: balance,
+                    payment_method: paymentMethod
+                }]);
+            }
+            fetchAndRenderCustomers();
+            return data;
         }
         
         async function deleteCustomer(id) {
-            await deleteDoc(doc(dbCollections.customers, id));
+            // Primeiro, apaga os registros dependentes em 'balance_logs'
+            const { error: logError } = await _supabase.from('balance_logs').delete().eq('customer_id', id);
+            if (logError) {
+                console.error("Erro ao excluir logs de saldo do cliente:", logError);
+                showSimpleMessage("Erro", "Não foi possível excluir o histórico de saldo do cliente.");
+                return;
+            }
+
+            // Segundo, apaga os registros dependentes em 'transactions'
+            const { error: transError } = await _supabase.from('transactions').delete().eq('customer_id', id);
+             if (transError) {
+                console.error("Erro ao excluir transações do cliente:", transError);
+                showSimpleMessage("Erro", "Não foi possível excluir o histórico de vendas do cliente.");
+                return;
+            }
+
+            // Finalmente, apaga o cliente
+            const { error: customerError } = await _supabase.from('customers').delete().eq('id', id);
+            if (customerError) {
+                console.error("Erro ao excluir cliente:", customerError);
+                showSimpleMessage("Erro", `Não foi possível excluir o cliente. Detalhes: ${customerError.message}`);
+            } else {
+                fetchAndRenderCustomers();
+            }
         }
         
         async function addBalance(customerId, amount, paymentMethod) {
-            const customerRef = doc(dbCollections.customers, customerId);
             const customer = customers.find(c => c.id === customerId);
-            const newBalance = customer.balance + amount;
+            const newBalance = Number(customer.balance) + amount;
             
-            const batch = writeBatch(db);
-            batch.update(customerRef, { balance: newBalance });
-            batch.set(doc(dbCollections.balance_logs), {
-                customerId,
+            const { error: updateError } = await _supabase.from('customers').update({ balance: newBalance }).eq('id', customerId);
+            if(updateError) { console.error("Erro ao atualizar saldo:", updateError); return; }
+
+            const { error: logError } = await _supabase.from('balance_logs').insert([{
+                customer_id: customerId,
                 amount,
-                paymentMethod,
-                createdAt: Timestamp.now()
-            });
-            await batch.commit();
+                payment_method: paymentMethod
+            }]);
+            if(logError) {
+                console.error("Erro ao registrar log de saldo:", logError);
+            } else {
+                fetchAndRenderCustomers();
+                fetchAndRenderBalanceLogs();
+            }
         }
 
         async function finalizeSale() {
@@ -790,55 +803,57 @@
             const itemsSummary = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
             let total = 0;
             const transactionItems = [];
-            const stockUpdates = {};
 
             for (const id in itemsSummary) {
                 const product = products.find(p => p.id === id);
                 const quantity = itemsSummary[id];
                 total += product.price * quantity;
                 transactionItems.push({ productId: id, name: product.name, price: product.price, quantity });
-                stockUpdates[id] = product.availableStock - quantity;
             }
 
             if (customer && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
-                const newBalance = customer.balance - total;
-                if (newBalance < customer.creditLimit) {
-                    const exceededAmount = Math.abs(newBalance - customer.creditLimit);
-                    showSimpleMessage('Limite de Crédito Excedido', `Esta compra excede o limite de R$ ${Math.abs(customer.creditLimit).toFixed(2)} em R$ ${exceededAmount.toFixed(2)}.`);
+                const newBalance = Number(customer.balance) - total;
+                if (newBalance < Number(customer.credit_limit)) {
+                    const exceededAmount = Math.abs(newBalance - Number(customer.credit_limit));
+                    showSimpleMessage('Limite de Crédito Excedido', `Esta compra excede o limite de R$ ${Math.abs(customer.credit_limit).toFixed(2)} em R$ ${exceededAmount.toFixed(2)}.`);
                     return;
                 }
             }
 
-            try {
-                const batch = writeBatch(db);
-                const saleDate = new Date(document.getElementById('sale-date').value + 'T' + new Date().toTimeString().split(' ')[0]);
+            const saleDate = new Date(document.getElementById('sale-date').value + 'T' + new Date().toTimeString().split(' ')[0]);
 
-                batch.set(doc(dbCollections.transactions), {
-                    customerId: customerId || null,
-                    customerName: customer ? customer.name : 'Avulso',
-                    items: transactionItems,
-                    total,
-                    paymentMethod: selectedPaymentMethod,
-                    createdAt: Timestamp.fromDate(saleDate)
-                });
+            const { error: transError } = await _supabase.from('transactions').insert([{
+                customer_id: customerId || null,
+                customer_name: customer ? customer.name : 'Avulso',
+                items: transactionItems,
+                total,
+                payment_method: selectedPaymentMethod,
+                created_at: saleDate.toISOString()
+            }]);
 
-                for (const id in stockUpdates) {
-                    batch.update(doc(dbCollections.products, id), { availableStock: stockUpdates[id] });
-                }
-
-                if (customerId && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
-                    const newBalance = customer.balance - total;
-                    batch.update(doc(dbCollections.customers, customerId), { balance: newBalance });
-                }
-
-                await batch.commit();
-                showSimpleMessage('Sucesso!', 'Venda finalizada com sucesso!');
-                currentOrder = [];
-                renderCurrentOrder();
-            } catch (e) {
-                console.error("Error finalizing sale: ", e);
+            if (transError) {
+                console.error("Erro ao finalizar venda:", transError);
                 showSimpleMessage('Erro', 'Ocorreu um erro ao finalizar a venda.');
+                return;
             }
+            
+            for (const item of transactionItems) {
+                const product = products.find(p => p.id === item.productId);
+                const newStock = product.available_stock - item.quantity;
+                await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
+            }
+
+            if (customerId && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
+                const newBalance = Number(customer.balance) - total;
+                await _supabase.from('customers').update({ balance: newBalance }).eq('id', customerId);
+            }
+
+            showSimpleMessage('Sucesso!', 'Venda finalizada com sucesso!');
+            currentOrder = [];
+            renderCurrentOrder();
+            fetchAndRenderProducts();
+            fetchAndRenderCustomers();
+            fetchAndRenderAllTransactions();
         }
         
         async function cancelSale(transactionId) {
@@ -848,49 +863,45 @@
                 return;
             }
 
-            const batch = writeBatch(db);
+            for (const item of transaction.items) {
+                 const product = products.find(p => p.id === item.productId);
+                 if (product) {
+                    const newStock = product.available_stock + item.quantity;
+                    await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
+                 }
+            }
 
-            // 1. Devolver estoque
-            transaction.items.forEach(item => {
-                const product = products.find(p => p.id === item.productId);
-                if (product) {
-                    const productRef = doc(dbCollections.products, item.productId);
-                    batch.update(productRef, { availableStock: product.availableStock + item.quantity });
-                }
-            });
-
-            // 2. Devolver saldo/crédito ao cliente
-            if (transaction.customerId && (transaction.paymentMethod === 'Saldo' || transaction.paymentMethod === 'Pagar Depois')) {
-                const customer = customers.find(c => c.id === transaction.customerId);
+            if (transaction.customer_id && (transaction.payment_method === 'Saldo' || transaction.payment_method === 'Pagar Depois')) {
+                const customer = customers.find(c => c.id === transaction.customer_id);
                 if (customer) {
-                    const customerRef = doc(dbCollections.customers, transaction.customerId);
-                    batch.update(customerRef, { balance: customer.balance + transaction.total });
+                    const newBalance = Number(customer.balance) + Number(transaction.total);
+                    await _supabase.from('customers').update({ balance: newBalance }).eq('id', transaction.customer_id);
                 }
             }
 
-            // 3. Excluir a transação
-            const transactionRef = doc(dbCollections.transactions, transactionId);
-            batch.delete(transactionRef);
+            const { error } = await _supabase.from('transactions').delete().eq('id', transactionId);
 
-            try {
-                await batch.commit();
-                showSimpleMessage('Sucesso', 'Venda cancelada com sucesso!');
-            } catch (e) {
-                console.error("Error cancelling sale: ", e);
+            if (error) {
+                console.error("Erro ao cancelar venda:", error);
                 showSimpleMessage('Erro', 'Não foi possível cancelar a venda.');
+            } else {
+                showSimpleMessage('Sucesso', 'Venda cancelada com sucesso!');
+                fetchAndRenderProducts();
+                fetchAndRenderCustomers();
             }
         }
 
         async function addCategory(name) {
-            try {
-                await addDoc(dbCollections.categories, { name });
-            } catch (e) {
-                console.error("Error adding category: ", e);
-                showSimpleMessage("Erro", "Não foi possível adicionar a categoria.");
+            const { error } = await _supabase.from('categories').insert([{ name }]);
+            if (error) {
+                console.error("Erro ao adicionar categoria:", error);
+                showSimpleMessage("Erro", "Não foi possível adicionar a categoria. Ela já existe?");
+            } else {
+                fetchAndRenderCategories();
             }
         }
 
-        // --- LÓGICA DE EXPORTAÇÃO ---
+        // --- LÓGICA DE EXPORTAÇÃO (Adaptada para Supabase) ---
         function exportToCSV(headers, rows, filename) {
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
             
@@ -910,27 +921,28 @@
 
         function handleExportProducts() {
             const headers = ["ID", "Nome", "Categoria", "PrecoCusto", "PrecoVenda", "EstoqueTotal", "EstoqueDisponivel"];
-            const rows = products.map(p => [p.id, p.name, p.category, p.costPrice, p.price, p.totalStock, p.availableStock]);
+            const rows = products.map(p => [p.id, p.name, p.category, p.cost_price, p.price, p.total_stock, p.available_stock]);
             exportToCSV(headers, rows, "produtos.csv");
         }
 
         function handleExportCustomers() {
             const headers = ["ID", "Nome", "Telefone", "Responsavel", "Saldo", "LimiteCredito"];
-            const rows = customers.map(c => [c.id, c.name, c.phone, c.responsibleName || '', c.balance, c.creditLimit]);
+            const rows = customers.map(c => [c.id, c.name, c.phone, c.responsible_name || '', c.balance, c.credit_limit]);
             exportToCSV(headers, rows, "clientes.csv");
         }
 
-        function handleExportSales() {
+        async function handleExportSales() {
+            await fetchTransactionsForReport();
             const headers = ["Data", "Cliente", "Itens", "Total", "Lucro", "Pagamento"];
             const rows = transactionsForReport.map(tx => {
-                const date = tx.createdAt.toDate().toLocaleString('pt-BR');
+                const date = new Date(tx.created_at).toLocaleString('pt-BR');
                 const items = tx.items.map(i => `${i.quantity}x ${i.name}`).join('; ');
                 let profit = 0;
                 tx.items.forEach(item => {
                     const product = products.find(p => p.id === item.productId);
-                    if (product && product.costPrice) profit += (item.price - product.costPrice) * item.quantity;
+                    if (product && product.cost_price) profit += (item.price - product.cost_price) * item.quantity;
                 });
-                return [date, tx.customerName, items, tx.total, profit.toFixed(2), tx.paymentMethod];
+                return [date, tx.customer_name, items, tx.total, profit.toFixed(2), tx.payment_method];
             });
             exportToCSV(headers, rows, `relatorio_vendas_${document.getElementById('report-date-start').value}_a_${document.getElementById('report-date-end').value}.csv`);
         }
@@ -939,14 +951,14 @@
             const headers = ["ID", "Nome", "Telefone", "Responsavel", "SaldoAtual", "TotalGasto"];
             const rows = customers.map(c => {
                 const totalSpent = allTransactions
-                    .filter(t => t.customerId === c.id)
-                    .reduce((sum, t) => sum + t.total, 0);
-                return [c.id, c.name, c.phone, c.responsibleName || '', c.balance, totalSpent];
+                    .filter(t => t.customer_id === c.id)
+                    .reduce((sum, t) => sum + Number(t.total), 0);
+                return [c.id, c.name, c.phone, c.responsible_name || '', c.balance, totalSpent];
             });
             exportToCSV(headers, rows, "relatorio_clientes.csv");
         }
 
-        // --- MODAL HANDLERS ---
+        // --- MODAL HANDLERS (Adaptados para Supabase) ---
         function showEditProductModal(productId) {
             const product = products.find(p => p.id === productId);
             const content = `
@@ -955,9 +967,9 @@
                     <div class="mt-4 space-y-4">
                         <div><label class="block text-sm">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border rounded-md p-2"></div>
                         <div><label class="block text-sm">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border rounded-md p-2"></select></div>
-                        <div><label class="block text-sm">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.costPrice || 0}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="mt-1 block w-full border rounded-md p-2"></div>
                         <div><label class="block text-sm">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.availableStock}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="mt-1 block w-full border rounded-md p-2"></div>
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
                         <button id="edit-product-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
@@ -971,9 +983,9 @@
                 const updatedData = {
                     name: document.getElementById('edit-product-name').value,
                     category: document.getElementById('edit-product-category').value,
-                    costPrice: parseFloat(document.getElementById('edit-product-cost-price').value),
+                    cost_price: parseFloat(document.getElementById('edit-product-cost-price').value),
                     price: parseFloat(document.getElementById('edit-product-price').value),
-                    availableStock: parseInt(document.getElementById('edit-product-available-stock').value)
+                    available_stock: parseInt(document.getElementById('edit-product-available-stock').value)
                 };
                 addOrUpdateProduct(updatedData, productId);
                 closeModal('edit-product-modal');
@@ -1049,9 +1061,9 @@
                     creditLimit: -Math.abs(parseFloat(document.getElementById('modal-customer-limit').value)) || 0,
                     paymentMethod: document.getElementById('modal-balance-payment-method').value
                 };
-                const newCustomerRef = await addCustomer(customerData);
+                const newCustomer = await addCustomer(customerData);
                 closeModal('add-customer-modal');
-                if (callback) callback(newCustomerRef.id);
+                if (callback && newCustomer) callback(newCustomer.id);
             };
         }
 
@@ -1098,10 +1110,10 @@
                 const data = {
                     name: document.getElementById('product-name').value,
                     category: document.getElementById('product-category').value || 'Geral',
-                    costPrice: parseFloat(document.getElementById('product-cost-price').value) || 0,
+                    cost_price: parseFloat(document.getElementById('product-cost-price').value) || 0,
                     price: parseFloat(document.getElementById('product-price').value),
-                    totalStock: initialStock,
-                    availableStock: initialStock
+                    total_stock: initialStock,
+                    available_stock: initialStock
                 };
                 addOrUpdateProduct(data);
                 e.target.reset();
@@ -1152,7 +1164,7 @@
                     const product = products.find(p => p.id === productId);
                     const itemsInCart = currentOrder.filter(id => id === productId).length;
                     
-                    if (itemsInCart < product.availableStock) {
+                    if (itemsInCart < product.available_stock) {
                         currentOrder.push(productId);
                         renderCurrentOrder();
                     } else {
@@ -1173,8 +1185,8 @@
             document.getElementById('finalize-sale-btn').onclick = finalizeSale;
             
             // Filtros de Data
-            document.getElementById('report-date-start').onchange = setupTransactionsListener;
-            document.getElementById('report-date-end').onchange = setupTransactionsListener;
+            document.getElementById('report-date-start').onchange = renderTransactionsTable;
+            document.getElementById('report-date-end').onchange = renderTransactionsTable;
         });
     </script>
 </body>
