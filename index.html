@@ -1,756 +1,1237 @@
-
-<!doctype html>
-<html class="dark" lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR" class=""> <!-- A classe 'dark' será adicionada aqui via JS -->
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistema de Gestão de Cantina</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='1.5'%3E%3Cpath d='M3 3h18v12a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V3z'/%3E%3Cpath d='M7 7h10'/%3E%3Cpath d='M9 11h6'/%3E%3C/svg%3E">
-  <!-- Fonte Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji']
-          },
-          colors: {
-            brand: {
-              50: '#ecfeff',
-              100: '#cffafe',
-              200: '#a5f3fc',
-              300: '#67e8f9',
-              400: '#22d3ee',
-              500: '#06b6d4',
-              600: '#0891b2',
-              700: '#0e7490',
-              800: '#155e75',
-              900: '#164e63'
-            }
-          },
-          boxShadow: {
-            'soft': '0 2px 8px -2px rgba(0,0,0,0.35), 0 4px 12px -4px rgba(0,0,0,0.25)'
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cantina do Acampamento v3.1 (Supabase)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-      }
-    };
-  </script>
-  <style>
-    /* Ajustes finos e acessibilidade */
-    :root { color-scheme: dark; }
-    ::selection { background: rgba(34, 211, 238, 0.25); }
-    /* Scrollbar discreta */
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: #334155 #0b1220;
-    }
-    *::-webkit-scrollbar { height: 8px; width: 8px; }
-    *::-webkit-scrollbar-track { background: #0b1220; }
-    *::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 8px; }
-  </style>
+        /* Estilo para a barra de rolagem */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .payment-btn {
+            @apply bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-200 dark:hover:bg-slate-600;
+        }
+        .payment-btn.active {
+            @apply bg-indigo-600 text-white dark:bg-indigo-500 ring-2 ring-indigo-400 ring-offset-2 dark:ring-offset-slate-900 shadow-lg;
+        }
+        .category-btn {
+             @apply bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-1.5 px-4 rounded-full text-sm font-medium border border-slate-200 dark:border-slate-600 transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-600;
+        }
+        .category-btn.active {
+            @apply bg-indigo-600 text-white border-indigo-600 font-semibold shadow-md;
+        }
+        .low-stock { 
+            color: #ef4444; /* red-500 */
+            font-weight: bold; 
+            animation: pulse 1.5s infinite; 
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .input-field {
+            @apply mt-1 block w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+        }
+    </style>
 </head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
-<body class="bg-slate-950 text-slate-100 font-sans antialiased">
-  <div class="min-h-screen flex">
-    <!-- Overlay do sidebar (mobile) -->
-    <div id="sidebar-overlay" class="fixed inset-0 z-30 bg-black/50 hidden md:hidden" aria-hidden="true"></div>
-
-    <!-- Sidebar -->
-    <aside id="sidebar" class="fixed md:static z-40 inset-y-0 left-0 w-80 md:w-72 -translate-x-full md:translate-x-0 transform transition-transform duration-300 bg-slate-900/80 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60 border-r border-slate-800">
-      <div class="h-full flex flex-col">
-        <!-- Branding topo -->
-        <div class="flex items-center justify-between px-4 py-4 border-b border-slate-800/80">
-          <div class="flex items-center gap-3">
-            <div class="h-10 w-10 grid place-content-center rounded-lg bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-400/20 shadow-soft">
-              <!-- Ícone logo -->
-              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-15 4.5h13.5m-12 4.5h10.5M6 3h12a3 3 0 013 3v12a6 6 0 01-6 6H9a6 6 0 01-6-6V6a3 3 0 013-3z"></path>
-              </svg>
-            </div>
-            <div>
-              <div class="font-semibold tracking-tight">Sistema de Gestão de Cantina</div>
-              <div class="text-xs text-slate-400">Painel Administrativo</div>
-            </div>
-          </div>
-          <button data-action="toggle-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" aria-label="Fechar menu">
-            <!-- X-Mark -->
-            <svg class="h-6 w-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Navegação -->
-        <nav class="px-2 py-4 overflow-y-auto">
-          <ul class="space-y-1">
-            <li>
-              <a id="nav-dashboard" data-label="Dashboard" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- Home Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 10.5l9-7.5 9 7.5V21a1.5 1.5 0 01-1.5 1.5H4.5A1.5 1.5 0 013 21V10.5z"></path>
-                  </svg>
-                </span>
-                <span class="truncate">Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a id="nav-pdv" data-label="PDV" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- ShoppingCart Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.25 3.75h2.5l2 12.5A1.75 1.75 0 008.5 18h8.75a1.75 1.75 0 001.72-1.41l1.53-7.59H6.04M9 21a1 1 0 100-2 1 1 0 000 2zm8.5 1a1 1 0 100-2 1 1 0 000 2z"></path>
-                  </svg>
-                </span>
-                <span class="truncate">PDV</span>
-              </a>
-            </li>
-            <li>
-              <a id="nav-products" data-label="Produtos" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- Cube Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-4.5-9 4.5 9 4.5 9-4.5z"></path>
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 12v9m9-13.5v9l-9 4.5-9-4.5v-9"></path>
-                  </svg>
-                </span>
-                <span class="truncate">Produtos</span>
-              </a>
-            </li>
-            <li>
-              <a id="nav-customers" data-label="Clientes" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- UserGroup Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 19.5a3.75 3.75 0 00-7.5 0m11.25 0a6.75 6.75 0 00-13.5 0M8.25 7.5A3.75 3.75 0 1015 7.5 3.75 3.75 0 008.25 7.5zM17.25 7.5a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z"></path>
-                  </svg>
-                </span>
-                <span class="truncate">Clientes</span>
-              </a>
-            </li>
-            <li>
-              <a id="nav-reports" data-label="Relatórios" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- ChartBar Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 20.25h18M6 18V9.75M10.5 18V5.25M15 18v-6M19.5 18v-9"></path>
-                  </svg>
-                </span>
-                <span class="truncate">Relatórios</span>
-              </a>
-            </li>
-            <li>
-              <a id="nav-customer-reports" data-label="Relatórios de Cliente" href="#" class="nav-link group flex items-center gap-3 px-3 py-2 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                <span class="shrink-0 h-5 w-5 text-slate-400 group-hover:text-cyan-300">
-                  <!-- UserCircle Icon -->
-                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 21.75A9.75 9.75 0 1121.75 12 9.75 9.75 0 0112 21.75z"></path>
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15.75 9.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM6.75 18a5.25 5.25 0 0110.5 0"></path>
-                  </svg>
-                </span>
-                <span class="truncate">Relatórios de Cliente</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        <div class="mt-auto px-4 py-3 border-t border-slate-800/80 text-xs text-slate-400">
-          v1.0 — Dark + Sidebar
-        </div>
-      </div>
-    </aside>
-
-    <!-- Conteúdo -->
-    <div class="flex-1 min-w-0">
-      <!-- Topbar -->
-      <header class="sticky top-0 z-20 bg-slate-950/80 backdrop-blur border-b border-slate-800/80">
-        <div class="px-4 md:px-6 py-3 flex items-center gap-3">
-          <button data-action="toggle-sidebar" class="md:hidden p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" aria-label="Abrir menu">
-            <!-- Bars-3 Icon -->
-            <svg class="h-6 w-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"></path>
-            </svg>
-          </button>
-          <h1 id="route-title" class="text-lg md:text-xl font-semibold tracking-tight">Dashboard</h1>
-
-          <div class="ml-auto flex items-center gap-2">
-            <div class="relative hidden sm:block">
-              <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z"></path>
-              </svg>
-              <input id="global-search" type="search" placeholder="Buscar... ( / )" class="w-64 pl-10 pr-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-colors" />
-            </div>
-            <input id="global-date" type="date" class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-colors" aria-label="Selecionar data" />
-            <button id="action-sync" class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Sincronizar">
-              <!-- ArrowPath Icon -->
-              <svg class="h-6 w-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992V4.356M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.54 3.54a8.25 8.25 0 0011.667 0 8.25 8.25 0 000-11.667 8.25 8.25 0 00-11.667 0l-.708.708"></path>
-              </svg>
-            </button>
-            <button id="action-reload" class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Recarregar">
-              <!-- ArrowPathRoundedSquare / Refresh -->
-              <svg class="h-6 w-6 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12a7.5 7.5 0 1112.94 5.303M19.5 12a7.5 7.5 0 10-12.94-5.303M12 3v3m0 12v3m9-9h-3M6 12H3"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <!-- Main -->
-      <main class="p-4 md:p-6 space-y-8">
-        <!-- Dashboard View -->
-        <section id="dashboard-view" data-view>
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-            <!-- KPI 1 -->
-            <div class="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft hover:border-cyan-500/30 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-slate-400">Vendas Hoje</p>
-                  <p class="mt-1 text-2xl font-semibold">R$ 1.250,00</p>
-                </div>
-                <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 grid place-content-center ring-1 ring-cyan-400/20">
-                  <!-- CurrencyDollar Icon -->
-                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4.5-4.5h6a3 3 0 000-6h-3a3 3 0 010-6h6"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="mt-3 text-xs text-slate-400">+12% vs ontem</div>
-            </div>
-            <!-- KPI 2 -->
-            <div class="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft hover:border-cyan-500/30 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-slate-400">Receita</p>
-                  <p class="mt-1 text-2xl font-semibold">R$ 8.540,00</p>
-                </div>
-                <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 grid place-content-center ring-1 ring-cyan-400/20">
-                  <!-- Banknotes Icon -->
-                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 8.25h18v7.5H3zM6 8.25a3 3 0 003 3 3 3 0 00-3-3zm12 7.5a3 3 0 01-3-3 3 3 0 013 3zM12 12.75a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="mt-3 text-xs text-slate-400">Atualizado agora</div>
-            </div>
-            <!-- KPI 3 -->
-            <div class="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft hover:border-cyan-500/30 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-slate-400">Itens Vendidos</p>
-                  <p class="mt-1 text-2xl font-semibold">342</p>
-                </div>
-                <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 grid place-content-center ring-1 ring-cyan-400/20">
-                  <!-- Cube Transparent Icon -->
-                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-4.5-9 4.5 9 4.5 9-4.5z"></path>
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 12v9m9-13.5v9l-9 4.5-9-4.5v-9"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="mt-3 text-xs text-slate-400">Média por hora: 28</div>
-            </div>
-            <!-- KPI 4 -->
-            <div class="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft hover:border-cyan-500/30 transition-colors">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-slate-400">Clientes Atendidos</p>
-                  <p class="mt-1 text-2xl font-semibold">127</p>
-                </div>
-                <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 grid place-content-center ring-1 ring-cyan-400/20">
-                  <!-- Users Icon -->
-                  <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 19.5a3.75 3.75 0 00-7.5 0m11.25 0a6.75 6.75 0 00-13.5 0M8.25 7.5A3.75 3.75 0 1015 7.5 3.75 3.75 0 008.25 7.5z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="mt-3 text-xs text-slate-400">+9 novos hoje</div>
-            </div>
-          </div>
-
-          <!-- Conteúdo secundário -->
-          <div class="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- Gráfico placeholder -->
-            <div class="xl:col-span-2 rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft">
-              <div class="flex items-center justify-between">
-                <h2 class="font-semibold">Vendas - Últimos 7 dias</h2>
-                <span class="text-xs text-slate-400">Gráfico (placeholder)</span>
-              </div>
-              <div class="mt-4 h-64 grid place-items-center text-slate-400 border border-dashed border-slate-700/60 rounded-lg" data-skeleton>
-                Área para gráfico
-              </div>
-            </div>
-
-            <!-- Últimas transações -->
-            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft">
-              <div class="flex items-center justify-between">
-                <h2 class="font-semibold">Últimas transações</h2>
-                <button class="text-xs text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-brand-500/60 rounded px-2 py-1">Ver todas</button>
-              </div>
-              <div class="mt-3 overflow-x-auto">
-                <table class="min-w-full text-sm">
-                  <thead class="text-slate-400">
-                    <tr class="text-left">
-                      <th class="py-2 pr-3 font-medium">Cliente</th>
-                      <th class="py-2 px-3 font-medium">Itens</th>
-                      <th class="py-2 px-3 font-medium">Total</th>
-                      <th class="py-2 pl-3 font-medium">Data</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-800/80">
-                    <tr class="hover:bg-slate-800/40 transition-colors">
-                      <td class="py-2 pr-3">Ana Souza</td>
-                      <td class="py-2 px-3 text-slate-300">3</td>
-                      <td class="py-2 px-3 text-cyan-300">R$ 19,50</td>
-                      <td class="py-2 pl-3 text-slate-400">Hoje, 10:12</td>
-                    </tr>
-                    <tr class="hover:bg-slate-800/40 transition-colors">
-                      <td class="py-2 pr-3">Cliente Avulso</td>
-                      <td class="py-2 px-3 text-slate-300">2</td>
-                      <td class="py-2 px-3 text-cyan-300">R$ 12,00</td>
-                      <td class="py-2 pl-3 text-slate-400">Hoje, 09:54</td>
-                    </tr>
-                    <tr class="hover:bg-slate-800/40 transition-colors">
-                      <td class="py-2 pr-3">Carlos Lima</td>
-                      <td class="py-2 px-3 text-slate-300">5</td>
-                      <td class="py-2 px-3 text-cyan-300">R$ 28,50</td>
-                      <td class="py-2 pl-3 text-slate-400">Hoje, 09:20</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- PDV View -->
-        <section id="pdv-view" data-view class="hidden">
-          <!-- Barra de busca do PDV -->
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div class="relative flex-1">
-              <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z"></path>
-              </svg>
-              <input type="search" placeholder="Buscar produtos no PDV..." class="w-full pl-10 pr-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-colors">
-            </div>
-            <div class="flex items-center gap-2">
-              <button class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">
-                <!-- Adjustments Icon -->
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h9m6 0h1.5M3.75 12h6m6 0h3.75M3.75 17.25h12m3 0h1.5"/></svg>
-                  <span>Filtros</span>
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Coluna Produtos -->
-            <div class="lg:col-span-2">
-              <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Card Produto 1 -->
-                <button class="group rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-left hover:border-cyan-500/30 hover:shadow-soft transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60" data-skeleton>
-                  <div class="aspect-video rounded-lg bg-slate-800/60 mb-3 grid place-items-center text-slate-500 text-xs">Imagem</div>
-                  <div class="font-medium">Coxinha</div>
-                  <div class="text-cyan-300">R$ 7,00</div>
-                  <div class="mt-2 text-xs text-slate-400">Estoque: 120</div>
-                </button>
-                <!-- Card Produto 2 -->
-                <button class="group rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-left hover:border-cyan-500/30 hover:shadow-soft transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60" data-skeleton>
-                  <div class="aspect-video rounded-lg bg-slate-800/60 mb-3 grid place-items-center text-slate-500 text-xs">Imagem</div>
-                  <div class="font-medium">Refrigerante Lata</div>
-                  <div class="text-cyan-300">R$ 6,50</div>
-                  <div class="mt-2 text-xs text-slate-400">Estoque: 85</div>
-                </button>
-                <!-- Card Produto 3 -->
-                <button class="group rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-left hover:border-cyan-500/30 hover:shadow-soft transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/60" data-skeleton>
-                  <div class="aspect-video rounded-lg bg-slate-800/60 mb-3 grid place-items-center text-slate-500 text-xs">Imagem</div>
-                  <div class="font-medium">Pão de Queijo</div>
-                  <div class="text-cyan-300">R$ 5,00</div>
-                  <div class="mt-2 text-xs text-slate-400">Estoque: 65</div>
-                </button>
-                <!-- + Cards placeholder -->
-                <div class="rounded-xl border border-dashed border-slate-800/70 bg-slate-900/30 p-3 grid place-items-center text-slate-500 text-sm">Mais itens...</div>
-              </div>
-            </div>
-
-            <!-- Coluna Carrinho -->
-            <div>
-              <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-soft sticky top-20">
-                <div class="flex items-center justify-between">
-                  <h2 class="font-semibold">Carrinho</h2>
-                  <span class="text-xs text-slate-400">3 itens</span>
-                </div>
-
-                <ul class="mt-3 space-y-3 max-h-80 overflow-y-auto pr-1">
-                  <li class="flex items-center justify-between">
-                    <div>
-                      <div class="font-medium">Coxinha</div>
-                      <div class="text-xs text-slate-400">Qnt: 1</div>
+    <div id="app-container" class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-md p-4 mb-8 sticky top-4 z-40 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 p-3 rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                     </div>
-                    <div class="text-cyan-300">R$ 7,00</div>
-                  </li>
-                  <li class="flex items-center justify-between">
                     <div>
-                      <div class="font-medium">Refrigerante Lata</div>
-                      <div class="text-xs text-slate-400">Qnt: 2</div>
+                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Cantina do Acampamento</h1>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Sistema de Ponto de Venda (PDV)</p>
                     </div>
-                    <div class="text-cyan-300">R$ 13,00</div>
-                  </li>
-                  <li class="flex items-center justify-between">
+                </div>
+                <div class="flex items-center gap-4">
                     <div>
-                      <div class="font-medium">Pão de Queijo</div>
-                      <div class="text-xs text-slate-400">Qnt: 1</div>
+                        <label for="sale-date" class="block text-sm font-medium text-slate-600 dark:text-slate-400">Data da Venda</label>
+                        <input type="date" id="sale-date" class="mt-1 block w-full bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <div class="text-cyan-300">R$ 5,00</div>
-                  </li>
+                    <button id="theme-toggle" class="p-2 rounded-full text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors">
+                        <svg id="theme-toggle-dark-icon" class="hidden h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="hidden h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 5.05A1 1 0 016.465 3.636l.707.707a1 1 0 01-1.414 1.414l-.707-.707zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <nav class="mt-4 border-t border-slate-200 dark:border-slate-700 pt-2">
+                <ul class="flex flex-wrap items-center gap-x-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                    <li><a href="#" id="nav-dashboard" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Dashboard</a></li>
+                    <li><a href="#" id="nav-pdv" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">PDV</a></li>
+                    <li><a href="#" id="nav-products" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Produtos</a></li>
+                    <li><a href="#" id="nav-customers" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Clientes</a></li>
+                    <li><a href="#" id="nav-reports" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Relatório de Vendas</a></li>
+                    <li><a href="#" id="nav-customer-reports" class="nav-link flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">Relatório de Clientes</a></li>
                 </ul>
+            </nav>
+        </header>
 
-                <div class="mt-4 border-t border-slate-800 pt-3">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-400">Subtotal</span>
-                    <span>R$ 25,00</span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-400">Desconto</span>
-                    <span>R$ 0,00</span>
-                  </div>
-                  <div class="flex items-center justify-between text-base font-semibold mt-2">
-                    <span>Total</span>
-                    <span class="text-cyan-300">R$ 25,00</span>
-                  </div>
-                </div>
-
-                <div class="mt-4 grid grid-cols-2 gap-2">
-                  <button class="px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors" onclick="openModal('confirm-modal')">Concluir</button>
-                  <button class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">Cancelar</button>
-                </div>
-              </div>
+        <main id="main-content">
+            <div id="loading-view" class="text-center p-10">
+                <p class="text-lg text-slate-600 dark:text-slate-400">Conectando ao banco de dados...</p>
             </div>
-          </div>
-        </section>
-
-        <!-- Products View -->
-        <section id="products-view" data-view class="hidden">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <button class="px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors" onclick="openModal('edit-product-modal')">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                  <span>Adicionar Produto</span>
-                </span>
-              </button>
-              <button class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:bg-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors" onclick="openModal('add-category-modal')">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 4.5h15m-15 4.5h9"/></svg>
-                  <span>Adicionar Categoria</span>
-                </span>
-              </button>
-              <button id="products-filter-toggle" class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:bg-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M6.75 12h10.5M9.75 17.25h4.5"/></svg>
-                  <span>Filtros</span>
-                </span>
-              </button>
-            </div>
-            <div class="flex items-center gap-2">
-              <button class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:bg-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 3h7.5v7.5H3zM13.5 3H21v7.5h-7.5zM3 13.5h7.5V21H3zM13.5 13.5H21V21h-7.5z"/></svg>
-                  <span>Exportar</span>
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Filtros -->
-          <div id="products-filters" class="mt-4 hidden">
-            <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div>
-                  <label for="pf-category" class="block text-xs text-slate-400 mb-1">Categoria</label>
-                  <select id="pf-category" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                    <option>Todas</option>
-                    <option>Salgados</option>
-                    <option>Bebidas</option>
-                    <option>Doces</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="pf-min" class="block text-xs text-slate-400 mb-1">Preço Mín.</label>
-                  <input id="pf-min" type="number" step="0.01" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60" placeholder="0,00">
-                </div>
-                <div>
-                  <label for="pf-max" class="block text-xs text-slate-400 mb-1">Preço Máx.</label>
-                  <input id="pf-max" type="number" step="0.01" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60" placeholder="0,00">
-                </div>
-                <div class="flex items-end">
-                  <button class="w-full px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/60">Aplicar</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tabela -->
-          <div class="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-900">
-                <tr class="text-left text-slate-400">
-                  <th class="px-4 py-3 font-medium">Nome</th>
-                  <th class="px-4 py-3 font-medium">Categoria</th>
-                  <th class="px-4 py-3 font-medium">Preço</th>
-                  <th class="px-4 py-3 font-medium">Estoque</th>
-                  <th class="px-4 py-3 font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Coxinha</td>
-                  <td class="px-4 py-3 text-slate-300">Salgados</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 7,00</td>
-                  <td class="px-4 py-3">120</td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Editar" onclick="openModal('edit-product-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.313 3 21l1.687-4.5L16.862 3.487z"></path></svg>
-                      </button>
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Excluir" onclick="openModal('confirm-modal')">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 7.5h12m-9 0V6a1.5 1.5 0 013 0v1.5m-6 0v12A1.5 1.5 0 007.5 21h9a1.5 1.5 0 001.5-1.5v-12"></path></svg>
-                      </button>
+            
+            <div id="dashboard-view" class="hidden">
+                 <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">Painel de Controle (Hoje)</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-green-100 dark:bg-green-900/50 p-3 rounded-lg text-green-600 dark:text-green-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-medium text-slate-500 dark:text-slate-400">Vendas Totais do Dia</h3>
+                                <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">R$ 0,00</p>
+                            </div>
+                        </div>
                     </div>
-                  </td>
-                </tr>
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Refrigerante Lata</td>
-                  <td class="px-4 py-3 text-slate-300">Bebidas</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 6,50</td>
-                  <td class="px-4 py-3">85</td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Editar" onclick="openModal('edit-product-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.313 3 21l1.687-4.5L16.862 3.487z"></path></svg>
-                      </button>
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Excluir" onclick="openModal('confirm-modal')">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 7.5h12m-9 0V6a1.5 1.5 0 013 0v1.5m-6 0v12A1.5 1.5 0 007.5 21h9a1.5 1.5 0 001.5-1.5v-12"></path></svg>
-                      </button>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-3">Produtos Mais Vendidos</h3>
+                        <ul id="dashboard-top-products" class="space-y-2 text-sm text-slate-700 dark:text-slate-300"></ul>
                     </div>
-                  </td>
-                </tr>
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Pão de Queijo</td>
-                  <td class="px-4 py-3 text-slate-300">Salgados</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 5,00</td>
-                  <td class="px-4 py-3">65</td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Editar" onclick="openModal('edit-product-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.313 3 21l1.687-4.5L16.862 3.487z"></path></svg>
-                      </button>
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Excluir" onclick="openModal('confirm-modal')">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 7.5h12m-9 0V6a1.5 1.5 0 013 0v1.5m-6 0v12A1.5 1.5 0 007.5 21h9a1.5 1.5 0 001.5-1.5v-12"></path></svg>
-                      </button>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-3">Últimas Transações</h3>
+                        <ul id="dashboard-recent-transactions" class="space-y-2 text-sm text-slate-700 dark:text-slate-300"></ul>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Customers View -->
-        <section id="customers-view" data-view class="hidden">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <button class="px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors" onclick="openModal('add-customer-modal')">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                  <span>Adicionar Cliente</span>
-                </span>
-              </button>
-              <button class="px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 hover:bg-slate-800 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors" onclick="openModal('add-balance-modal')">
-                <span class="inline-flex items-center gap-2">
-                  <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v18m-4.5-4.5h6a3 3 0 000-6h-3a3 3 0 010-6h6"/></svg>
-                  <span>Adicionar Saldo</span>
-                </span>
-              </button>
+                 </div>
             </div>
-            <div class="relative">
-              <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z"></path>
-              </svg>
-              <input type="search" placeholder="Buscar clientes..." class="w-72 pl-10 pr-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-transparent transition-colors">
-            </div>
-          </div>
 
-          <div class="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-900">
-                <tr class="text-left text-slate-400">
-                  <th class="px-4 py-3 font-medium">Nome</th>
-                  <th class="px-4 py-3 font-medium">Telefone</th>
-                  <th class="px-4 py-3 font-medium">Saldo</th>
-                  <th class="px-4 py-3 font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Ana Souza</td>
-                  <td class="px-4 py-3 text-slate-300">(11) 99999-0000</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 15,00</td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Adicionar Saldo" onclick="openModal('add-balance-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4.5-4.5h6a3 3 0 000-6h-3a3 3 0 010-6h6"/></svg>
-                      </button>
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Editar" onclick="openModal('add-customer-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.313 3 21l1.687-4.5L16.862 3.487z"></path></svg>
-                      </button>
+            <div id="pdv-view" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
+                            <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Frente de Caixa</h2>
+                        </div>
+                        <div id="category-filters" class="flex flex-wrap gap-2 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700"></div>
+                        <div id="product-list-pdv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto pr-2"></div>
                     </div>
-                  </td>
-                </tr>
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Carlos Lima</td>
-                  <td class="px-4 py-3 text-slate-300">(11) 98888-1111</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 0,00</td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Adicionar Saldo" onclick="openModal('add-balance-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4.5-4.5h6a3 3 0 000-6h-3a3 3 0 010-6h6"/></svg>
-                      </button>
-                      <button class="p-2 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/60" title="Editar" onclick="openModal('add-customer-modal')">
-                        <svg class="h-5 w-5 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.313 3 21l1.687-4.5L16.862 3.487z"></path></svg>
-                      </button>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 flex flex-col">
+                        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">Pedido Atual</h2>
+                        <div class="mb-4">
+                            <label for="customer-select" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cliente</label>
+                            <div class="flex gap-2">
+                                <select id="customer-select" class="block w-full pl-3 pr-10 py-2 text-base border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm rounded-lg"></select>
+                                <button id="add-customer-pdv-btn" class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 p-2 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900 transition-colors">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="current-order" class="space-y-2 mb-4 flex-grow min-h-[150px] border-y border-slate-200 dark:border-slate-700 py-4"></div>
+                        <div class="text-right mb-4">
+                            <p class="text-lg font-semibold text-slate-600 dark:text-slate-300">Total: <span id="order-total" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">R$ 0,00</span></p>
+                        </div>
+                        <div class="mt-auto">
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Forma de Pagamento</label>
+                            <div id="payment-method" class="grid grid-cols-3 gap-2">
+                                <button data-method="Saldo" class="payment-btn">Saldo</button>
+                                <button data-method="PIX" class="payment-btn">PIX</button>
+                                <button data-method="Dinheiro" class="payment-btn">Dinheiro</button>
+                                <button data-method="Cartão" class="payment-btn">Cartão</button>
+                                <button data-method="Pagar Depois" class="payment-btn col-span-2">Pagar Depois</button>
+                            </div>
+                            <button id="finalize-sale-btn" class="mt-6 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-900 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                Finalizar Compra
+                            </button>
+                        </div>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Reports View -->
-        <section id="reports-view" data-view class="hidden">
-          <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-              <div>
-                <label for="rep-from" class="block text-xs text-slate-400 mb-1">De</label>
-                <input id="rep-from" type="date" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-              </div>
-              <div>
-                <label for="rep-to" class="block text-xs text-slate-400 mb-1">Até</label>
-                <input id="rep-to" type="date" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-              </div>
-              <div class="md:col-span-2">
-                <label for="rep-type" class="block text-xs text-slate-400 mb-1">Tipo</label>
-                <select id="rep-type" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                  <option>Vendas</option>
-                  <option>Produtos</option>
-                  <option>Clientes</option>
-                </select>
-              </div>
-              <div class="flex items-end gap-2">
-                <button class="flex-1 px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">Gerar</button>
-                <button class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/60 transition-colors">Exportar</button>
-              </div>
+                </div>
             </div>
-          </div>
-
-          <div class="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-900">
-                <tr class="text-left text-slate-400">
-                  <th class="px-4 py-3 font-medium">Descrição</th>
-                  <th class="px-4 py-3 font-medium">Categoria</th>
-                  <th class="px-4 py-3 font-medium">Qtde</th>
-                  <th class="px-4 py-3 font-medium">Valor</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Venda #1542</td>
-                  <td class="px-4 py-3 text-slate-300">Vendas</td>
-                  <td class="px-4 py-3">7</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 45,00</td>
-                </tr>
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">Produto Mais Vendido</td>
-                  <td class="px-4 py-3 text-slate-300">Produtos</td>
-                  <td class="px-4 py-3">Coxinha</td>
-                  <td class="px-4 py-3 text-cyan-300">R$ 0,00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Customer Reports View -->
-        <section id="customer-reports-view" data-view class="hidden">
-          <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div class="md:col-span-2">
-                <label for="cr-customer" class="block text-xs text-slate-400 mb-1">Cliente</label>
-                <select id="cr-customer" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-                  <option>Selecione um cliente...</option>
-                  <option>Ana Souza</option>
-                  <option>Carlos Lima</option>
-                </select>
-              </div>
-              <div>
-                <label for="cr-from" class="block text-xs text-slate-400 mb-1">De</label>
-                <input id="cr-from" type="date" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-              </div>
-              <div>
-                <label for="cr-to" class="block text-xs text-slate-400 mb-1">Até</label>
-                <input id="cr-to" type="date" class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500/60">
-              </div>
+            
+            <div id="products-view" class="hidden bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Gerenciar Produtos</h2>
+                    <div class="flex gap-2">
+                        <button id="add-category-btn" class="flex items-center gap-2 bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 7h10v9a2 2 0 01-2 2H7a2 2 0 01-2-2V7z" /></svg>
+                           Categoria
+                        </button>
+                        <button id="export-products-btn" class="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+                <form id="add-product-form" class="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div><label for="product-name" class="block text-sm font-medium">Nome</label><input type="text" id="product-name" required class="input-field"></div>
+                    <div><label for="product-category" class="block text-sm font-medium">Categoria</label><select id="product-category" required class="input-field"></select></div>
+                    <div><label for="product-cost-price" class="block text-sm font-medium">Preço Custo</label><input type="number" id="product-cost-price" step="0.01" required class="input-field"></div>
+                    <div><label for="product-price" class="block text-sm font-medium">Preço Venda</label><input type="number" id="product-price" step="0.01" required class="input-field"></div>
+                    <div><label for="product-initial-stock" class="block text-sm font-medium">Estoque</label><input type="number" id="product-initial-stock" step="1" required class="input-field"></div>
+                    <button type="submit" class="sm:col-span-2 lg:col-span-5 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        Adicionar Produto
+                    </button>
+                </form>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preço Venda</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estoque</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list-table" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
             </div>
-          </div>
 
-          <div class="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60">
-            <table class="min-w-full text-sm">
-              <thead class="bg-slate-900">
-                <tr class="text-left text-slate-400">
-                  <th class="px-4 py-3 font-medium">Data</th>
-                  <th class="px-4 py-3 font-medium">Descrição</th>
-                  <th class="px-4 py-3 font-medium">Valor</th>
-                  <th class="px-4 py-3 font-medium">Saldo</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-800">
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">2025-08-18</td>
-                  <td class="px-4 py-3 text-slate-300">Compra PDV</td>
-                  <td class="px-4 py-3 text-cyan-300">- R$ 7,00</td>
-                  <td class="px-4 py-3">R$ 8,00</td>
-                </tr>
-                <tr class="hover:bg-slate-800/40 transition-colors">
-                  <td class="px-4 py-3">2025-08-17</td>
-                  <td class="px-4 py-3 text-slate-300">Depósito</td>
-                  <td class="px-4 py-3 text-emerald-300">+ R$ 20,00</td>
-                  <td class="px-4 py-3">R$ 15,00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+             <div id="customers-view" class="hidden bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Gerenciar Clientes</h2>
+                    <div class="flex gap-2">
+                         <button id="add-customer-view-btn" class="flex items-center gap-2 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Novo Cliente
+                        </button>
+                        <button id="export-customers-btn" class="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Telefone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Saldo</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-list-table" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="reports-view" class="hidden bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Relatório de Vendas</h2>
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <label for="report-date-start" class="block text-sm font-medium">De:</label>
+                            <input type="date" id="report-date-start" class="input-field">
+                        </div>
+                        <div>
+                            <label for="report-date-end" class="block text-sm font-medium">Até:</label>
+                            <input type="date" id="report-date-end" class="input-field">
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                    <div class="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg"><h4 class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600">R$ 0,00</p></div>
+                    <div class="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg"><h4 class="text-sm font-medium text-slate-500 dark:text-slate-400">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600">R$ 0,00</p></div>
+                    <div class="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg"><h4 class="text-sm font-medium text-slate-500 dark:text-slate-400">Vendas</h4><p id="period-transactions" class="text-xl font-bold">0</p></div>
+                    <div class="bg-slate-100 dark:bg-slate-700/50 p-4 rounded-lg"><h4 class="text-sm font-medium text-slate-500 dark:text-slate-400">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold">0</p></div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg shadow-inner mb-6 border dark:border-slate-700">
+                    <h3 class="text-lg font-semibold mb-2">Fechamento de Caixa</h3>
+                    <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
+                </div>
+                <div class="flex justify-end mb-4">
+                    <button id="export-sales-report-btn" class="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Itens</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Pagamento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Lucro</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase">Total</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium uppercase">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-list-table" class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="customer-reports-view" class="hidden">
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Relatório de Clientes</h2>
+                    <button id="export-customer-report-btn" class="flex items-center gap-2 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                </div>
+                <div id="customer-report-container" class="space-y-6"></div>
+            </div>
+        </main>
     </div>
-  </div>
 
-  <!-- Modais -->
-  <!-- Message Modal -->
-  <div id="message-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-black/70 transition-opacity" data-modal-overlay></div>
-    <div class="relative z-10 min-h-full flex items-end sm:items-center justify-center p-4">
-      <div class="w-full sm:max-w-md transform rounded-xl border border-slate-800 bg-slate-900/90 backdrop-blur p-4 shadow-soft transition-all duration-150 opacity-0 scale-95" role="dialog" aria-modal="true" aria-labelledby="message-modal-title" data-modal-panel>
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-2">
-            <div class="h-8 w-8 grid place-content-center rounded-md bg-cyan-500/10 text-cyan-400 ring-1 ring-cyan-400/20">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="
+    <!-- Modals -->
+    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"></div>
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"></div>
+    <div id="edit-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"></div>
+    <div id="add-balance-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"></div>
+    <div id="add-customer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto p-4"></div>
+    <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"></div>
+
+
+    <script type="module">
+        const SUPABASE_URL = 'https://tajxtakefalzlrizkpqq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhanh0YWtlZmFsemxyaXprcHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjAzNjEsImV4cCI6MjA2ODQzNjM2MX0.belYo84KUtRMzhGlq4TZP3MXbQXQbLqhJ3A9CzqPGI';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentView = 'dashboard';
+        let currentOrder = [];
+        let products = [];
+        let customers = [];
+        let categories = [];
+        let allTransactions = [];
+        let transactionsForReport = [];
+        let balanceLogs = [];
+        let onConfirmCallback = null;
+        let selectedPaymentMethod = null;
+        const LOW_STOCK_THRESHOLD = 5;
+        let realTimeSubscriptions = [];
+
+        function initializeAppLogic() {
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('COLE')) {
+                showSimpleMessage("Configuração Necessária", "Por favor, preencha a SUPABASE_URL e a SUPABASE_ANON_KEY no código HTML para conectar ao banco de dados.");
+                return;
+            }
+            document.getElementById('loading-view').classList.add('hidden');
+            setupDataListeners();
+            setInitialDate();
+            setupThemeToggle();
+            showView('dashboard');
+        }
+
+        function showView(viewId) {
+            Array.from(document.getElementById('main-content').children).forEach(child => child.classList.add('hidden'));
+            const viewElement = document.getElementById(`${viewId}-view`);
+            if (viewElement) viewElement.classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-700', 'dark:text-indigo-300', 'font-semibold');
+            });
+            const activeLink = document.getElementById(`nav-${viewId}`);
+            if(activeLink) activeLink.classList.add('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-700', 'dark:text-indigo-300', 'font-semibold');
+
+            currentView = viewId;
+            if (viewId === 'dashboard') renderDashboard();
+            if (viewId === 'reports') renderTransactionsTable();
+            if (viewId === 'customer-reports') renderCustomerReports();
+        }
+        
+        function showModal(modalId, content) {
+            const modal = document.getElementById(modalId);
+            modal.innerHTML = content;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            modal.innerHTML = '';
+        }
+        
+        function showSimpleMessage(title, message) {
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto border dark:border-slate-700">
+                    <h3 class="text-lg font-medium leading-6 text-slate-900 dark:text-white">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-slate-500 dark:text-slate-400">${message}</p></div>
+                    <div class="mt-5">
+                        <button id="simple-message-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800">OK</button>
+                    </div>
+                </div>`;
+            showModal('message-modal', content);
+            document.getElementById('simple-message-ok-btn').onclick = () => closeModal('message-modal');
+        }
+        
+        function showConfirmModal(title, message, callback) {
+            onConfirmCallback = callback;
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto border dark:border-slate-700">
+                    <h3 class="text-lg font-medium leading-6 text-slate-900 dark:text-white">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-slate-500 dark:text-slate-400">${message}</p></div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button id="confirm-modal-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:col-start-2 sm:text-sm">Confirmar</button>
+                        <button id="confirm-modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2 bg-white dark:bg-slate-700 text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 sm:mt-0 sm:col-start-1 sm:text-sm">Cancelar</button>
+                    </div>
+                </div>`;
+            showModal('confirm-modal', content);
+            document.getElementById('confirm-modal-confirm-btn').onclick = () => {
+                if(onConfirmCallback) onConfirmCallback();
+                closeModal('confirm-modal');
+            };
+            document.getElementById('confirm-modal-cancel-btn').onclick = () => closeModal('confirm-modal');
+        }
+        
+        function setInitialDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sale-date').value = today;
+            const reportDateStartInput = document.getElementById('report-date-start');
+            const reportDateEndInput = document.getElementById('report-date-end');
+            if (reportDateStartInput) reportDateStartInput.value = today;
+            if (reportDateEndInput) reportDateEndInput.value = today;
+        }
+
+        function renderDashboard() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const todaysTransactions = allTransactions.filter(t => new Date(t.created_at) >= today);
+
+            const totalSales = todaysTransactions.reduce((sum, t) => sum + Number(t.total), 0);
+            document.getElementById('dashboard-total-sales').textContent = `R$ ${totalSales.toFixed(2)}`;
+
+            const productCounts = todaysTransactions.flatMap(t => t.items).reduce((acc, item) => {
+                acc[item.name] = (acc[item.name] || 0) + item.quantity;
+                return acc;
+            }, {});
+            const topProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const topProductsList = document.getElementById('dashboard-top-products');
+            topProductsList.innerHTML = topProducts.map(p => `<li><span class="font-semibold text-indigo-500 dark:text-indigo-400">${p[1]}x</span> ${p[0]}</li>`).join('') || '<li class="text-slate-400">Nenhuma venda hoje.</li>';
+
+            const recentTransactions = todaysTransactions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+            const recentTransactionsList = document.getElementById('dashboard-recent-transactions');
+            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li><span class="font-semibold">${t.customer_name}</span> - <span class="text-green-600 dark:text-green-400">R$ ${Number(t.total).toFixed(2)}</span></li>`).join('') || '<li class="text-slate-400">Nenhuma venda hoje.</li>';
+        }
+
+        function renderCategoryOptions(selectElementId, selectedCategory = null) {
+            const select = document.getElementById(selectElementId);
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione uma categoria</option>';
+            categories.forEach(cat => {
+                const selected = cat.name === selectedCategory ? 'selected' : '';
+                select.innerHTML += `<option value="${cat.name}" ${selected}>${cat.name}</option>`;
+            });
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = `<button class="category-btn active" data-category="all">Todos</button>`;
+            categories.forEach(cat => {
+                container.innerHTML += `<button class="category-btn" data-category="${cat.name}">${cat.name}</button>`;
+            });
+        }
+
+        function filterProductsByCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.category-btn[data-category="${category}"]`).classList.add('active');
+            
+            const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+            renderProductsPDV(filteredProducts);
+        }
+
+        function renderProductsTable() {
+            const tableBody = document.getElementById('product-list-table');
+            if (!tableBody) return;
+            tableBody.innerHTML = products.map(p => {
+                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : '';
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">${p.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${p.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">R$ ${Number(p.price).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${stockClass}">${p.available_stock}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${p.id}" class="edit-product-btn p-2 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button data-id="${p.id}" class="delete-product-btn p-2 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function renderProductsPDV(productsToRender = products) {
+            const container = document.getElementById('product-list-pdv');
+            if (!container) return;
+            container.innerHTML = productsToRender.map(p => {
+                const isDisabled = p.available_stock <= 0;
+                const disabledClasses = isDisabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer group hover:shadow-lg hover:border-indigo-500 hover:-translate-y-1';
+                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD && !isDisabled ? 'low-stock' : 'text-slate-500 dark:text-slate-400';
+                return `
+                    <div class="product-card bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center transition-all duration-200 ${disabledClasses}" data-id="${p.id}" ${isDisabled ? 'disabled' : ''}>
+                        <p class="font-bold text-slate-800 dark:text-slate-100 text-sm">${p.name}</p>
+                        <p class="text-sm font-semibold text-indigo-500 dark:text-indigo-400">R$ ${Number(p.price).toFixed(2)}</p>
+                        <p class="text-xs ${stockClass} mt-2">Estoque: <span class="font-bold">${p.available_stock}</span></p>
+                    </div>`;
+            }).join('');
+        }
+        
+        function renderCustomersTable() {
+            const tableBody = document.getElementById('customer-list-table');
+            if (!tableBody) return;
+            tableBody.innerHTML = customers.map(c => {
+                const balanceClass = c.balance < 0 ? 'text-red-500' : 'text-green-500';
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">${c.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${c.phone}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${balanceClass}">R$ ${Number(c.balance).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${c.id}" class="add-balance-btn p-2 rounded-md hover:bg-green-100 dark:hover:bg-green-900/50 text-green-600 dark:text-green-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.5 2.5 0 004 0V7.151c.22.071.412.164.567.267v1.698a2.5 2.5 0 004 0V7.418c.155.103.346.196.567.267v1.846a3.5 3.5 0 01-1.167.982V10a.5.5 0 00-.5-.5h-1a.5.5 0 00-.5.5v.748a3.5 3.5 0 01-3 0V10a.5.5 0 00-.5-.5h-1a.5.5 0 00-.5.5v.248a3.5 3.5 0 01-1.167-.982V7.685z" /><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1.268a3.5 3.5 0 000 5.464V17a1 1 0 102 0V9.732a3.5 3.5 0 000-5.464V3a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <button data-id="${c.id}" class="delete-customer-btn p-2 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function renderCustomersSelect() {
+            const select = document.getElementById('customer-select');
+            if (!select) return;
+            select.innerHTML = '<option value="">Cliente Avulso</option>';
+            customers.forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.name} (Saldo: R$ ${Number(c.balance).toFixed(2)})</option>`;
+            });
+        }
+
+        function renderCurrentOrder() {
+            const orderContainer = document.getElementById('current-order');
+            const totalEl = document.getElementById('order-total');
+            if (!orderContainer || !totalEl) return;
+            
+            if (currentOrder.length === 0) {
+                orderContainer.innerHTML = `<p class="text-center text-sm text-slate-400 dark:text-slate-500 py-8">Seu carrinho está vazio.</p>`;
+            } else {
+                orderContainer.innerHTML = '';
+            }
+
+            let total = 0;
+            const itemsCount = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
+
+            Object.keys(itemsCount).forEach(id => {
+                const product = products.find(p => p.id === id);
+                if (product) {
+                    const count = itemsCount[id];
+                    total += product.price * count;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'flex justify-between items-center text-sm py-1';
+                    itemDiv.innerHTML = `
+                        <div>
+                            <span class="font-medium text-slate-800 dark:text-slate-200">${count}x ${product.name}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-600 dark:text-slate-300">R$ ${(product.price * count).toFixed(2)}</span>
+                            <button data-id="${id}" class="remove-from-cart-btn text-red-400 hover:text-red-600 font-bold text-lg">&times;</button>
+                        </div>`;
+                    orderContainer.appendChild(itemDiv);
+                }
+            });
+            totalEl.textContent = `R$ ${total.toFixed(2)}`;
+        }
+
+        async function renderTransactionsTable() {
+            await fetchTransactionsForReport(); 
+
+            const tableBody = document.getElementById('transactions-list-table');
+            const periodTotalEl = document.getElementById('period-total');
+            const periodProfitEl = document.getElementById('period-profit');
+            const periodTransactionsEl = document.getElementById('period-transactions');
+            const periodItemsEl = document.getElementById('period-items');
+            const cashClosingSummaryEl = document.getElementById('cash-closing-summary');
+
+            if (!tableBody || !periodTotalEl) return;
+            tableBody.innerHTML = '';
+            let periodTotal = 0;
+            let periodProfit = 0;
+            let periodItems = 0;
+            const cashClosing = {};
+
+            transactionsForReport.forEach(tx => {
+                const txDate = new Date(tx.created_at);
+                const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                let transactionProfit = 0;
+                tx.items.forEach(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    if (product && product.cost_price) {
+                        transactionProfit += (item.price - product.cost_price) * item.quantity;
+                    }
+                });
+                
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${txDate.toLocaleString('pt-BR')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">${tx.customer_name}</td>
+                        <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">${itemsStr}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${tx.payment_method}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">R$ ${transactionProfit.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">R$ ${Number(tx.total).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 hover:text-red-900">Cancelar</button>
+                        </td>
+                    </tr>`;
+                periodTotal += Number(tx.total);
+                periodProfit += transactionProfit;
+                periodItems += tx.items.reduce((sum, item) => sum + item.quantity, 0);
+
+                if (tx.payment_method !== 'Saldo' && tx.payment_method !== 'Pagar Depois') {
+                    cashClosing[tx.payment_method] = (cashClosing[tx.payment_method] || 0) + Number(tx.total);
+                }
+            });
+            periodTotalEl.textContent = `R$ ${periodTotal.toFixed(2)}`;
+            periodProfitEl.textContent = `R$ ${periodProfit.toFixed(2)}`;
+            periodTransactionsEl.textContent = transactionsForReport.length;
+            periodItemsEl.textContent = periodItems;
+            
+            cashClosingSummaryEl.innerHTML = Object.entries(cashClosing)
+                .map(([method, total]) => `<div><span class="font-semibold">${method}:</span> R$ ${total.toFixed(2)}</div>`)
+                .join('') || 'Nenhum recebimento em caixa.';
+        }
+        
+        function renderCustomerReports() {
+            const container = document.getElementById('customer-report-container');
+            if (!container) return;
+            container.innerHTML = '';
+            customers.forEach(customer => {
+                const customerTransactions = allTransactions.filter(t => t.customer_id === customer.id);
+                const customerBalanceLogs = balanceLogs.filter(l => l.customer_id === customer.id);
+                const totalSpent = customerTransactions.reduce((sum, t) => sum + Number(t.total), 0);
+                const balanceClass = customer.balance < 0 ? 'text-red-600' : 'text-green-600';
+
+                let purchasesHtml = '<p class="text-sm text-slate-500">Nenhuma compra registrada.</p>';
+                if (customerTransactions.length > 0) {
+                    purchasesHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
+                    customerTransactions.forEach(tx => {
+                        tx.items.forEach(item => {
+                            purchasesHtml += `<li class="text-sm text-slate-700 dark:text-slate-300">${item.quantity}x ${item.name} - R$ ${Number(item.price).toFixed(2)} (em ${new Date(tx.created_at).toLocaleDateString()})</li>`;
+                        });
+                    });
+                    purchasesHtml += '</ul>';
+                }
+                
+                let balanceLogHtml = '<p class="text-sm text-slate-500">Nenhuma recarga registrada.</p>';
+                if (customerBalanceLogs.length > 0) {
+                    balanceLogHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
+                    customerBalanceLogs.forEach(log => {
+                        balanceLogHtml += `<li class="text-sm text-slate-700 dark:text-slate-300">+ R$ ${Number(log.amount).toFixed(2)} (${log.payment_method}) em ${new Date(log.created_at).toLocaleDateString()}</li>`;
+                    });
+                    balanceLogHtml += '</ul>';
+                }
+
+                container.innerHTML += `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border dark:border-slate-700">
+                        <h3 class="text-lg font-bold text-indigo-700 dark:text-indigo-400">${customer.name}</h3>
+                        <div class="grid grid-cols-2 gap-4 mt-2 text-sm">
+                            <div><span class="font-semibold">Telefone:</span> ${customer.phone}</div>
+                            <div><span class="font-semibold">Responsável:</span> ${customer.responsible_name || 'N/A'}</div>
+                            <div><span class="font-semibold">Total Gasto:</span> R$ ${totalSpent.toFixed(2)}</div>
+                            <div><span class="font-semibold">Saldo Atual:</span> <span class="${balanceClass}">R$ ${Number(customer.balance).toFixed(2)}</span></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div><h4 class="font-semibold text-md">Histórico de Compras:</h4>${purchasesHtml}</div>
+                            <div><h4 class="font-semibold text-md">Histórico de Recargas:</h4>${balanceLogHtml}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function fetchAndRenderProducts() {
+            const { data, error } = await _supabase.from('products').select('*');
+            if (error) { console.error('Erro ao buscar produtos:', error); return; }
+            products = data.sort((a, b) => a.name.localeCompare(b.name));
+            renderProductsTable();
+            renderProductsPDV();
+        };
+        async function fetchAndRenderCustomers() {
+            const { data, error } = await _supabase.from('customers').select('*');
+            if (error) { console.error('Erro ao buscar clientes:', error); return; }
+            customers = data.sort((a, b) => a.name.localeCompare(b.name));
+            renderCustomersTable();
+            renderCustomersSelect();
+            if(currentView === 'customer-reports') renderCustomerReports();
+        };
+        async function fetchAndRenderCategories() {
+            const { data, error } = await _supabase.from('categories').select('*');
+            if (error) { console.error('Erro ao buscar categorias:', error); return; }
+            categories = data.sort((a, b) => a.name.localeCompare(b.name));
+            renderCategoryOptions('product-category');
+            renderCategoryFilters();
+        };
+        async function fetchAndRenderAllTransactions() {
+             const { data, error } = await _supabase.from('transactions').select('*');
+             if (error) { console.error('Erro ao buscar todas as transações:', error); return; }
+             allTransactions = data;
+             if(currentView === 'customer-reports') renderCustomerReports();
+             if(currentView === 'dashboard') renderDashboard();
+        };
+        async function fetchAndRenderBalanceLogs() {
+             const { data, error } = await _supabase.from('balance_logs').select('*');
+             if (error) { console.error('Erro ao buscar logs de saldo:', error); return; }
+             balanceLogs = data;
+             if(currentView === 'customer-reports') renderCustomerReports();
+        };
+
+        function setupDataListeners() {
+            realTimeSubscriptions.forEach(sub => _supabase.removeChannel(sub));
+            realTimeSubscriptions = [];
+
+            const createRealtimeSubscription = (table, callback) => {
+                const channel = _supabase.channel(`public:${table}`)
+                    .on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
+                        console.log(`Mudança detectada em ${table}:`, payload);
+                        callback();
+                    })
+                    .subscribe();
+                realTimeSubscriptions.push(channel);
+            };
+            
+            fetchAndRenderProducts();
+            fetchAndRenderCustomers();
+            fetchAndRenderCategories();
+            fetchAndRenderAllTransactions();
+            fetchAndRenderBalanceLogs();
+
+            createRealtimeSubscription('products', fetchAndRenderProducts);
+            createRealtimeSubscription('customers', fetchAndRenderCustomers);
+            createRealtimeSubscription('categories', fetchAndRenderCategories);
+            createRealtimeSubscription('transactions', fetchAndRenderAllTransactions);
+            createRealtimeSubscription('balance_logs', fetchAndRenderBalanceLogs);
+        }
+        
+        async function fetchTransactionsForReport() {
+            const reportDateStartInput = document.getElementById('report-date-start');
+            const reportDateEndInput = document.getElementById('report-date-end');
+            if (!reportDateStartInput || !reportDateEndInput) return;
+
+            const startDate = reportDateStartInput.value + 'T00:00:00';
+            const endDate = reportDateEndInput.value + 'T23:59:59';
+
+            const { data, error } = await _supabase.from('transactions')
+                .select('*')
+                .gte('created_at', startDate)
+                .lte('created_at', endDate);
+            
+            if (error) {
+                console.error("Erro ao buscar transações para o relatório:", error);
+                transactionsForReport = [];
+            } else {
+                transactionsForReport = data;
+            }
+        }
+
+        async function addOrUpdateProduct(productData, id = null) {
+            let response;
+            if (id) {
+                response = await _supabase.from('products').update(productData).eq('id', id);
+            } else {
+                response = await _supabase.from('products').insert([productData]);
+            }
+            if (response.error) {
+                console.error("Erro ao salvar produto:", response.error);
+                showSimpleMessage("Erro", "Não foi possível salvar as informações do produto.");
+            }
+        }
+        
+        async function deleteProduct(id) {
+            const { error } = await _supabase.from('products').delete().eq('id', id);
+            if (error) {
+                console.error("Erro ao excluir produto:", error);
+            }
+        }
+        
+        async function addCustomer(customerData) {
+            const { name, phone, responsibleName, balance, creditLimit, paymentMethod } = customerData;
+            
+            const { data, error } = await _supabase.from('customers').insert([{ 
+                name, 
+                phone, 
+                responsible_name: responsibleName, 
+                balance, 
+                credit_limit: creditLimit 
+            }]).select().single();
+
+            if (error) {
+                 console.error("Erro ao adicionar cliente:", error);
+                 return null;
+            }
+            
+            if (balance > 0) {
+                await _supabase.from('balance_logs').insert([{
+                    customer_id: data.id,
+                    amount: balance,
+                    payment_method: paymentMethod
+                }]);
+            }
+            return data;
+        }
+        
+        async function deleteCustomer(id) {
+            const { error: logError } = await _supabase.from('balance_logs').delete().eq('customer_id', id);
+            if (logError) {
+                console.error("Erro ao excluir logs de saldo do cliente:", logError);
+                showSimpleMessage("Erro", "Não foi possível excluir o histórico de saldo do cliente.");
+                return;
+            }
+
+            const { error: transError } = await _supabase.from('transactions').delete().eq('customer_id', id);
+             if (transError) {
+                console.error("Erro ao excluir transações do cliente:", transError);
+                showSimpleMessage("Erro", "Não foi possível excluir o histórico de vendas do cliente.");
+                return;
+            }
+
+            const { error: customerError } = await _supabase.from('customers').delete().eq('id', id);
+            if (customerError) {
+                console.error("Erro ao excluir cliente:", customerError);
+                showSimpleMessage("Erro", `Não foi possível excluir o cliente. Detalhes: ${customerError.message}`);
+            }
+        }
+        
+        async function addBalance(customerId, amount, paymentMethod) {
+            const customer = customers.find(c => c.id === customerId);
+            const newBalance = Number(customer.balance) + amount;
+            
+            const { error: updateError } = await _supabase.from('customers').update({ balance: newBalance }).eq('id', customerId);
+            if(updateError) { console.error("Erro ao atualizar saldo:", updateError); return; }
+
+            const { error: logError } = await _supabase.from('balance_logs').insert([{
+                customer_id: customerId,
+                amount,
+                payment_method: paymentMethod
+            }]);
+            if(logError) {
+                console.error("Erro ao registrar log de saldo:", logError);
+            }
+        }
+
+        async function finalizeSale() {
+            const customerId = document.getElementById('customer-select').value;
+            if ((selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois') && !customerId) {
+                showSimpleMessage('Atenção', 'Selecione um cliente para usar Saldo ou Pagar Depois.');
+                return;
+            }
+            if (currentOrder.length === 0) { showSimpleMessage('Atenção', 'O pedido está vazio.'); return; }
+            if (!selectedPaymentMethod) { showSimpleMessage('Atenção', 'Selecione uma forma de pagamento.'); return; }
+
+            const customer = customers.find(c => c.id === customerId);
+            const itemsSummary = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
+            let total = 0;
+            const transactionItems = [];
+
+            for (const id in itemsSummary) {
+                const product = products.find(p => p.id === id);
+                const quantity = itemsSummary[id];
+                total += product.price * quantity;
+                transactionItems.push({ productId: id, name: product.name, price: product.price, quantity });
+            }
+
+            if (customer && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
+                const newBalance = Number(customer.balance) - total;
+                if (newBalance < Number(customer.credit_limit)) {
+                    const exceededAmount = Math.abs(newBalance - Number(customer.credit_limit));
+                    showSimpleMessage('Limite de Crédito Excedido', `Esta compra excede o limite de R$ ${Math.abs(customer.credit_limit).toFixed(2)} em R$ ${exceededAmount.toFixed(2)}.`);
+                    return;
+                }
+            }
+
+            const saleDate = new Date(document.getElementById('sale-date').value + 'T' + new Date().toTimeString().split(' ')[0]);
+
+            const { error: transError } = await _supabase.from('transactions').insert([{
+                customer_id: customerId || null,
+                customer_name: customer ? customer.name : 'Avulso',
+                items: transactionItems,
+                total,
+                payment_method: selectedPaymentMethod,
+                created_at: saleDate.toISOString()
+            }]);
+
+            if (transError) {
+                console.error("Erro ao finalizar venda:", transError);
+                showSimpleMessage('Erro', 'Ocorreu um erro ao finalizar a venda.');
+                return;
+            }
+            
+            for (const item of transactionItems) {
+                const product = products.find(p => p.id === item.productId);
+                const newStock = product.available_stock - item.quantity;
+                await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
+            }
+
+            if (customerId && (selectedPaymentMethod === 'Saldo' || selectedPaymentMethod === 'Pagar Depois')) {
+                const newBalance = Number(customer.balance) - total;
+                await _supabase.from('customers').update({ balance: newBalance }).eq('id', customerId);
+            }
+
+            showSimpleMessage('Sucesso!', 'Venda finalizada com sucesso!');
+            currentOrder = [];
+            renderCurrentOrder();
+        }
+        
+        async function cancelSale(transactionId) {
+            const transaction = allTransactions.find(t => t.id === transactionId);
+            if (!transaction) {
+                showSimpleMessage('Erro', 'Transação não encontrada.');
+                return;
+            }
+
+            for (const item of transaction.items) {
+                 const product = products.find(p => p.id === item.productId);
+                 if (product) {
+                    const newStock = product.available_stock + item.quantity;
+                    await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
+                 }
+            }
+
+            if (transaction.customer_id && (transaction.payment_method === 'Saldo' || transaction.payment_method === 'Pagar Depois')) {
+                const customer = customers.find(c => c.id === transaction.customer_id);
+                if (customer) {
+                    const newBalance = Number(customer.balance) + Number(transaction.total);
+                    await _supabase.from('customers').update({ balance: newBalance }).eq('id', transaction.customer_id);
+                }
+            }
+
+            const { error } = await _supabase.from('transactions').delete().eq('id', transactionId);
+
+            if (error) {
+                console.error("Erro ao cancelar venda:", error);
+                showSimpleMessage('Erro', 'Não foi possível cancelar a venda.');
+            } else {
+                showSimpleMessage('Sucesso', 'Venda cancelada com sucesso!');
+            }
+        }
+
+        async function addCategory(name) {
+            const { error } = await _supabase.from('categories').insert([{ name }]);
+            if (error) {
+                console.error("Erro ao adicionar categoria:", error);
+                showSimpleMessage("Erro", "Não foi possível adicionar a categoria. Ela já existe?");
+            }
+        }
+
+        function exportToCSV(headers, rows, filename) {
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+            
+            rows.forEach(rowArray => {
+                let row = rowArray.map(field => (typeof field === 'string' && field.includes(',')) ? `"${field}"` : field).join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleExportProducts() {
+            const headers = ["ID", "Nome", "Categoria", "PrecoCusto", "PrecoVenda", "EstoqueTotal", "EstoqueDisponivel"];
+            const rows = products.map(p => [p.id, p.name, p.category, p.cost_price, p.price, p.total_stock, p.available_stock]);
+            exportToCSV(headers, rows, "produtos.csv");
+        }
+
+        function handleExportCustomers() {
+            const headers = ["ID", "Nome", "Telefone", "Responsavel", "Saldo", "LimiteCredito"];
+            const rows = customers.map(c => [c.id, c.name, c.phone, c.responsible_name || '', c.balance, c.credit_limit]);
+            exportToCSV(headers, rows, "clientes.csv");
+        }
+
+        async function handleExportSales() {
+            await fetchTransactionsForReport();
+            const headers = ["Data", "Cliente", "Itens", "Total", "Lucro", "Pagamento"];
+            const rows = transactionsForReport.map(tx => {
+                const date = new Date(tx.created_at).toLocaleString('pt-BR');
+                const items = tx.items.map(i => `${i.quantity}x ${i.name}`).join('; ');
+                let profit = 0;
+                tx.items.forEach(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    if (product && product.cost_price) profit += (item.price - product.cost_price) * item.quantity;
+                });
+                return [date, tx.customer_name, items, tx.total, profit.toFixed(2), tx.payment_method];
+            });
+            exportToCSV(headers, rows, `relatorio_vendas_${document.getElementById('report-date-start').value}_a_${document.getElementById('report-date-end').value}.csv`);
+        }
+
+        function handleExportCustomerReports() {
+            const headers = ["ID", "Nome", "Telefone", "Responsavel", "SaldoAtual", "TotalGasto"];
+            const rows = customers.map(c => {
+                const totalSpent = allTransactions
+                    .filter(t => t.customer_id === c.id)
+                    .reduce((sum, t) => sum + Number(t.total), 0);
+                return [c.id, c.name, c.phone, c.responsible_name || '', c.balance, totalSpent];
+            });
+            exportToCSV(headers, rows, "relatorio_clientes.csv");
+        }
+
+        function showEditProductModal(productId) {
+            const product = products.find(p => p.id === productId);
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium">Editar Produto</h3>
+                    <div class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Nome</label><input id="edit-product-name" value="${product.name}" class="input-field"></div>
+                        <div><label class="block text-sm">Categoria</label><select id="edit-product-category" class="input-field"></select></div>
+                        <div><label class="block text-sm">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="input-field"></div>
+                        <div><label class="block text-sm">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="input-field"></div>
+                        <div><label class="block text-sm">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="input-field"></div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="edit-product-cancel-btn" class="bg-slate-200 dark:bg-slate-600 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="save-product-changes" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                    </div>
+                </div>`;
+            showModal('edit-product-modal', content);
+            renderCategoryOptions('edit-product-category', product.category);
+            document.getElementById('edit-product-cancel-btn').onclick = () => closeModal('edit-product-modal');
+            document.getElementById('save-product-changes').onclick = () => {
+                const updatedData = {
+                    name: document.getElementById('edit-product-name').value,
+                    category: document.getElementById('edit-product-category').value,
+                    cost_price: parseFloat(document.getElementById('edit-product-cost-price').value),
+                    price: parseFloat(document.getElementById('edit-product-price').value),
+                    available_stock: parseInt(document.getElementById('edit-product-available-stock').value)
+                };
+                addOrUpdateProduct(updatedData, productId);
+                closeModal('edit-product-modal');
+            };
+        }
+        
+        function showAddBalanceModal(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Saldo para ${customer.name}</h3>
+                    <div class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="input-field"></div>
+                        <div><label class="block text-sm">Forma de Pagamento</label><select id="add-balance-payment-method" class="input-field"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="add-balance-cancel-btn" class="bg-slate-200 dark:bg-slate-600 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="save-balance-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Adicionar</button>
+                    </div>
+                </div>`;
+            showModal('add-balance-modal', content);
+            document.getElementById('add-balance-cancel-btn').onclick = () => closeModal('add-balance-modal');
+            document.getElementById('save-balance-btn').onclick = () => {
+                const amount = parseFloat(document.getElementById('add-balance-amount').value);
+                const method = document.getElementById('add-balance-payment-method').value;
+                if (amount > 0) {
+                    addBalance(customerId, amount, method);
+                    closeModal('add-balance-modal');
+                } else {
+                    showSimpleMessage('Valor Inválido', 'Insira um valor válido.');
+                }
+            };
+        }
+        
+        function showAddCustomerModal(callback) {
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Novo Cliente</h3>
+                    <form id="modal-add-customer-form" class="mt-4 space-y-4">
+                        <div><label class="block text-sm">Nome Completo*</label><input type="text" id="modal-customer-name" required class="input-field"></div>
+                        <div><label class="block text-sm">Telefone*</label><input type="tel" id="modal-customer-phone" required class="input-field"></div>
+                        <div><label class="block text-sm">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="input-field"></div>
+                        <div><label class="block text-sm">Limite de Crédito (Ex: 50 para R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="input-field"></div>
+                        <div><label class="block text-sm">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="input-field"></div>
+                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="input-field"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" id="add-customer-cancel-btn" class="bg-slate-200 dark:bg-slate-600 py-2 px-4 rounded-md">Cancelar</button>
+                            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar Cliente</button>
+                        </div>
+                    </form>
+                </div>`;
+            showModal('add-customer-modal', content);
+
+            document.getElementById('add-customer-cancel-btn').onclick = () => closeModal('add-customer-modal');
+            const balanceInput = document.getElementById('modal-customer-balance');
+            const paymentDiv = document.getElementById('modal-payment-method-div');
+            balanceInput.oninput = () => {
+                paymentDiv.classList.toggle('hidden', parseFloat(balanceInput.value) <= 0);
+            };
+
+            document.getElementById('modal-add-customer-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const phone = document.getElementById('modal-customer-phone').value;
+                if (!phone) {
+                    showSimpleMessage('Erro', 'O campo Telefone é obrigatório.');
+                    return;
+                }
+                const customerData = {
+                    name: document.getElementById('modal-customer-name').value,
+                    phone: phone,
+                    responsibleName: document.getElementById('modal-customer-responsible').value,
+                    balance: parseFloat(balanceInput.value) || 0,
+                    creditLimit: -Math.abs(parseFloat(document.getElementById('modal-customer-limit').value)) || 0,
+                    paymentMethod: document.getElementById('modal-balance-payment-method').value
+                };
+                const newCustomer = await addCustomer(customerData);
+                closeModal('add-customer-modal');
+                if (callback && newCustomer) callback(newCustomer.id);
+            };
+        }
+
+        function showAddCategoryModal() {
+            const content = `
+                <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                    <h3 class="text-lg font-medium">Adicionar Nova Categoria</h3>
+                    <div class="mt-4">
+                        <label class="block text-sm">Nome da Categoria</label>
+                        <input id="new-category-name" type="text" class="input-field">
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button id="add-category-cancel-btn" class="bg-slate-200 dark:bg-slate-600 py-2 px-4 rounded-md">Cancelar</button>
+                        <button id="add-category-save-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                    </div>
+                </div>`;
+            showModal('add-category-modal', content);
+            document.getElementById('add-category-cancel-btn').onclick = () => closeModal('add-category-modal');
+            document.getElementById('add-category-save-btn').onclick = () => {
+                const name = document.getElementById('new-category-name').value;
+                if (name) {
+                    addCategory(name);
+                    closeModal('add-category-modal');
+                } else {
+                    showSimpleMessage('Erro', 'O nome da categoria não pode ser vazio.');
+                }
+            };
+        }
+
+        function setupThemeToggle() {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const darkIcon = document.getElementById('theme-toggle-dark-icon');
+            const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                lightIcon.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkIcon.classList.remove('hidden');
+            }
+
+            themeToggleBtn.addEventListener('click', function() {
+                darkIcon.classList.toggle('hidden');
+lightIcon.classList.toggle('hidden');
+                document.documentElement.classList.toggle('dark');
+                const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                localStorage.setItem('color-theme', theme);
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppLogic();
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const viewId = link.id.replace('nav-', '');
+                link.addEventListener('click', (e) => { e.preventDefault(); showView(viewId); });
+            });
+
+            document.getElementById('add-product-form').onsubmit = (e) => {
+                e.preventDefault();
+                const initialStock = parseInt(document.getElementById('product-initial-stock').value);
+                const data = {
+                    name: document.getElementById('product-name').value,
+                    category: document.getElementById('product-category').value || 'Geral',
+                    cost_price: parseFloat(document.getElementById('product-cost-price').value) || 0,
+                    price: parseFloat(document.getElementById('product-price').value),
+                    total_stock: initialStock,
+                    available_stock: initialStock
+                };
+                addOrUpdateProduct(data);
+                e.target.reset();
+            };
+            
+            document.getElementById('add-customer-view-btn').onclick = () => showAddCustomerModal();
+            document.getElementById('add-customer-pdv-btn').onclick = () => {
+                showAddCustomerModal((newId) => {
+                    setTimeout(() => { document.getElementById('customer-select').value = newId; }, 500);
+                });
+            };
+
+            document.getElementById('add-category-btn').onclick = showAddCategoryModal;
+            document.getElementById('export-products-btn').onclick = handleExportProducts;
+            document.getElementById('export-customers-btn').onclick = handleExportCustomers;
+            document.getElementById('export-sales-report-btn').onclick = handleExportSales;
+            document.getElementById('export-customer-report-btn').onclick = handleExportCustomerReports;
+
+             document.getElementById('main-content').addEventListener('click', (e) => {
+                const target = e.target;
+                const productCard = target.closest('.product-card');
+
+                if (target.closest('.delete-product-btn')) {
+                    const button = target.closest('.delete-product-btn');
+                    showConfirmModal('Excluir Produto?', 'Esta ação não pode ser desfeita.', () => deleteProduct(button.dataset.id));
+                }
+                else if (target.closest('.edit-product-btn')) {
+                    const button = target.closest('.edit-product-btn');
+                    showEditProductModal(button.dataset.id);
+                }
+                else if (target.closest('.delete-customer-btn')) {
+                    const button = target.closest('.delete-customer-btn');
+                    showConfirmModal('Excluir Cliente?', 'Todas as dívidas e saldos serão perdidos.', () => deleteCustomer(button.dataset.id));
+                }
+                else if (target.closest('.add-balance-btn')) {
+                    const button = target.closest('.add-balance-btn');
+                    showAddBalanceModal(button.dataset.id);
+                }
+                else if (target.classList.contains('remove-from-cart-btn')) {
+                    const productIdToRemove = target.dataset.id;
+                    const index = currentOrder.indexOf(productIdToRemove);
+                    if (index > -1) {
+                        currentOrder.splice(index, 1);
+                        renderCurrentOrder();
+                    }
+                }
+                else if (target.classList.contains('cancel-sale-btn')) {
+                     showConfirmModal('Cancelar Venda?', 'O estoque será devolvido e o saldo do cliente estornado. Esta ação não pode ser desfeita.', () => cancelSale(target.dataset.id));
+                }
+                else if (productCard && !productCard.hasAttribute('disabled')) {
+                    const productId = productCard.dataset.id;
+                    const product = products.find(p => p.id === productId);
+                    const itemsInCart = currentOrder.filter(id => id === productId).length;
+                    
+                    if (itemsInCart < product.available_stock) {
+                        currentOrder.push(productId);
+                        renderCurrentOrder();
+                    } else {
+                        showSimpleMessage('Limite Atingido', 'Não há mais unidades deste produto no estoque disponível.');
+                    }
+                }
+                else if (target.classList.contains('payment-btn')) {
+                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+                    target.classList.add('active');
+                    selectedPaymentMethod = target.dataset.method;
+                }
+                else if (target.classList.contains('category-btn')) {
+                    filterProductsByCategory(target.dataset.category);
+                }
+            });
+            
+            document.getElementById('finalize-sale-btn').onclick = finalizeSale;
+            
+            document.getElementById('report-date-start').onchange = renderTransactionsTable;
+            document.getElementById('report-date-end').onchange = renderTransactionsTable;
+        });
+    </script>
+</body>
+</html>
