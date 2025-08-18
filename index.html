@@ -142,7 +142,12 @@
 
                 <!-- Dashboard View -->
                 <div id="dashboard-view" class="hidden">
-                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Painel de Controle (Hoje)</h2>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Painel de Controle (Hoje)</h2>
+                        <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                             <h3 class="text-base font-medium text-gray-500 dark:text-gray-400">Vendas Totais do Dia</h3>
@@ -163,7 +168,12 @@
                 <div id="pdv-view" class="hidden">
                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Selecione os Produtos</h2>
+                            <div class="flex justify-between items-center">
+                                <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Selecione os Produtos</h2>
+                                <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
                             <div id="category-filters" class="flex flex-wrap gap-2 my-4 border-b pb-4 border-gray-200 dark:border-gray-700"></div>
                             <div id="product-list-pdv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto p-1"></div>
                         </div>
@@ -202,8 +212,13 @@
                 <!-- Products View -->
                 <div id="products-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Gerenciar Produtos</h2>
-                        <div class="flex gap-2 flex-wrap">
+                        <div class="flex items-center gap-4">
+                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Gerenciar Produtos</h2>
+                            <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 flex-wrap mt-4 sm:mt-0">
                             <button id="add-category-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors focus-ring text-sm">Adicionar Categoria</button>
                             <button id="export-products-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors focus-ring text-sm">Exportar para CSV</button>
                         </div>
@@ -237,8 +252,13 @@
                 <!-- Customers View -->
                 <div id="customers-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Gerenciar Clientes</h2>
-                        <div class="flex gap-2 flex-wrap">
+                        <div class="flex items-center gap-4">
+                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Gerenciar Clientes</h2>
+                            <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 flex-wrap mt-4 sm:mt-0">
                              <button id="add-customer-view-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus-ring text-sm">Adicionar Cliente</button>
                              <button id="export-customers-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm">Exportar para CSV</button>
                         </div>
@@ -261,8 +281,13 @@
                 <!-- Sales Report View -->
                 <div id="reports-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Relatório de Vendas</h2>
-                        <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-4">
+                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Relatório de Vendas</h2>
+                            <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-4 flex-wrap mt-4 sm:mt-0">
                             <div><label for="report-date-start" class="block text-sm font-medium text-gray-700 dark:text-gray-300">De:</label><input type="date" id="report-date-start" class="mt-1 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
                             <div><label for="report-date-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Até:</label><input type="date" id="report-date-end" class="mt-1 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
                         </div>
@@ -301,8 +326,13 @@
                 <!-- Customer Reports View -->
                 <div id="customer-reports-view" class="hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Relatório de Clientes</h2>
-                        <button id="export-customer-report-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm">Exportar para CSV</button>
+                        <div class="flex items-center gap-4">
+                           <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Relatório de Clientes</h2>
+                            <button class="refresh-data-btn p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                        <button id="export-customer-report-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm mt-4 sm:mt-0">Exportar para CSV</button>
                     </div>
                     <div id="customer-report-container" class="space-y-6"></div>
                 </div>
@@ -1214,52 +1244,56 @@
             document.getElementById('export-sales-report-btn').onclick = handleExportSales;
             document.getElementById('export-customer-report-btn').onclick = handleExportCustomerReports;
 
-            // Delegação de Eventos
-            document.getElementById('main-content').addEventListener('click', (e) => {
+            // Delegação de Eventos para o corpo principal do conteúdo
+            document.body.addEventListener('click', (e) => {
                 const target = e.target;
-                if (target.classList.contains('delete-product-btn')) {
-                    showConfirmModal('Excluir Produto?', 'Esta ação não pode ser desfeita.', () => deleteProduct(target.dataset.id));
-                }
-                if (target.classList.contains('edit-product-btn')) {
-                    showEditProductModal(target.dataset.id);
-                }
-                if (target.classList.contains('delete-customer-btn')) {
-                    showConfirmModal('Excluir Cliente?', 'Todas as dívidas e saldos serão perdidos.', () => deleteCustomer(target.dataset.id));
-                }
-                if (target.classList.contains('add-balance-btn')) {
-                    showAddBalanceModal(target.dataset.id);
-                }
-                 if (target.classList.contains('remove-from-cart-btn')) {
-                    const productIdToRemove = target.dataset.id;
-                    const index = currentOrder.indexOf(productIdToRemove);
-                    if (index > -1) {
-                        currentOrder.splice(index, 1);
-                        renderCurrentOrder();
+
+                // Ações dentro do #main-content
+                if (target.closest('#main-content')) {
+                    if (target.classList.contains('delete-product-btn')) {
+                        showConfirmModal('Excluir Produto?', 'Esta ação não pode ser desfeita.', () => deleteProduct(target.dataset.id));
                     }
-                }
-                 if (target.classList.contains('cancel-sale-btn')) {
-                    showConfirmModal('Cancelar Venda?', 'O estoque será devolvido e o saldo do cliente estornado. Esta ação não pode ser desfeita.', () => cancelSale(target.dataset.id));
-                }
-                if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('cursor-not-allowed')) {
-                    const card = target.closest('.product-card');
-                    const productId = card.dataset.id;
-                    const product = products.find(p => p.id == productId);
-                    const itemsInCart = currentOrder.filter(id => id === productId).length;
-                    
-                    if (itemsInCart < product.available_stock) {
-                        currentOrder.push(productId);
-                        renderCurrentOrder();
-                    } else {
-                        showSimpleMessage('Limite Atingido', 'Não há mais unidades deste produto no estoque disponível.');
+                    if (target.classList.contains('edit-product-btn')) {
+                        showEditProductModal(target.dataset.id);
                     }
-                }
-                if (target.classList.contains('payment-btn')) {
-                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
-                    target.classList.add('active');
-                    selectedPaymentMethod = target.dataset.method;
-                }
-                if (target.classList.contains('category-btn')) {
-                    filterProductsByCategory(target.dataset.category);
+                    if (target.classList.contains('delete-customer-btn')) {
+                        showConfirmModal('Excluir Cliente?', 'Todas as dívidas e saldos serão perdidos.', () => deleteCustomer(target.dataset.id));
+                    }
+                    if (target.classList.contains('add-balance-btn')) {
+                        showAddBalanceModal(target.dataset.id);
+                    }
+                    if (target.classList.contains('remove-from-cart-btn')) {
+                        const productIdToRemove = target.dataset.id;
+                        const index = currentOrder.indexOf(productIdToRemove);
+                        if (index > -1) {
+                            currentOrder.splice(index, 1);
+                            renderCurrentOrder();
+                        }
+                    }
+                    if (target.classList.contains('cancel-sale-btn')) {
+                        showConfirmModal('Cancelar Venda?', 'O estoque será devolvido e o saldo do cliente estornado. Esta ação não pode ser desfeita.', () => cancelSale(target.dataset.id));
+                    }
+                    if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('cursor-not-allowed')) {
+                        const card = target.closest('.product-card');
+                        const productId = card.dataset.id;
+                        const product = products.find(p => p.id == productId);
+                        const itemsInCart = currentOrder.filter(id => id === productId).length;
+                        
+                        if (itemsInCart < product.available_stock) {
+                            currentOrder.push(productId);
+                            renderCurrentOrder();
+                        } else {
+                            showSimpleMessage('Limite Atingido', 'Não há mais unidades deste produto no estoque disponível.');
+                        }
+                    }
+                    if (target.classList.contains('payment-btn')) {
+                        document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+                        target.classList.add('active');
+                        selectedPaymentMethod = target.dataset.method;
+                    }
+                    if (target.classList.contains('category-btn')) {
+                        filterProductsByCategory(target.dataset.category);
+                    }
                 }
             });
             
@@ -1306,6 +1340,37 @@
                 sidebarTexts.forEach(text => text.classList.toggle('hidden'));
                 sidebarTitle.classList.toggle('hidden');
             });
+
+            // Lógica do Botão de Recarregar
+            document.querySelectorAll('.refresh-data-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const icon = btn.querySelector('svg');
+                    icon.classList.add('animate-spin');
+                    await refreshAllData();
+                    // Adiciona um pequeno delay para o usuário perceber a animação
+                    setTimeout(() => {
+                        icon.classList.remove('animate-spin');
+                    }, 500);
+                });
+            });
+        }
+
+        // Nova função para recarregar todos os dados
+        async function refreshAllData() {
+            console.log("Refreshing all data...");
+            await Promise.all([
+                fetchAndRenderProducts(),
+                fetchAndRenderCustomers(),
+                fetchAndRenderCategories(),
+                fetchAndRenderAllTransactions(),
+                fetchAndRenderBalanceLogs()
+            ]);
+            
+            // Re-renderiza a view atual com os novos dados
+            if (currentView === 'dashboard') renderDashboard();
+            if (currentView === 'reports') renderTransactionsTable();
+            if (currentView === 'customer-reports') renderCustomerReports();
+            console.log("Data refreshed.");
         }
         
         document.addEventListener('DOMContentLoaded', initializeAppLogic);
