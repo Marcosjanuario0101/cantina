@@ -89,7 +89,7 @@
             <div class="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
                 <!-- ABAIXO É O LOCAL PARA COLOCAR UMA IMAGEM DE LOGO -->
                 <!-- Exemplo: <img src="url_da_sua_imagem.png" alt="Logo" class="h-8 w-auto"> -->
-                <img src="https://semdescullpas.com.br/wp-content/uploads/2025/07/Group-1-1-2048x473.png" alt="Logo" class="h-8 w-auto"> 
+                <h1 id="sidebar-title" class="text-xl font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">Cantina do Acampamento</h1>
             </div>
             <nav class="flex-1 overflow-y-auto p-4">
                 <ul class="space-y-2">
@@ -349,7 +349,6 @@
 
         // --- LÓGICA DE INICIALIZAÇÃO ---
         function initializeAppLogic() {
-            // CORREÇÃO: Verifica se as chaves do Supabase foram preenchidas
             if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('COLE_SUA')) {
                  document.getElementById('loading-view').classList.add('hidden');
                  showSimpleMessage("Configuração Necessária", "Por favor, preencha a SUPABASE_URL e a SUPABASE_ANON_KEY no código HTML para conectar ao banco de dados.");
@@ -561,7 +560,7 @@
             const itemsCount = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
 
             Object.keys(itemsCount).forEach(id => {
-                const product = products.find(p => p.id === id);
+                const product = products.find(p => p.id == id);
                 if (product) {
                     const count = itemsCount[id];
                     total += product.price * count;
@@ -605,7 +604,7 @@
                 const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
                 let transactionProfit = 0;
                 tx.items.forEach(item => {
-                    const product = products.find(p => p.id === item.productId);
+                    const product = products.find(p => p.id == item.productId);
                     if (product && product.cost_price) {
                         transactionProfit += (item.price - product.cost_price) * item.quantity;
                     }
@@ -646,8 +645,8 @@
             if (!container) return;
             container.innerHTML = '';
             customers.sort((a, b) => a.name.localeCompare(b.name)).forEach(customer => {
-                const customerTransactions = allTransactions.filter(t => t.customer_id === customer.id);
-                const customerBalanceLogs = balanceLogs.filter(l => l.customer_id === customer.id);
+                const customerTransactions = allTransactions.filter(t => t.customer_id == customer.id);
+                const customerBalanceLogs = balanceLogs.filter(l => l.customer_id == customer.id);
                 const totalSpent = customerTransactions.reduce((sum, t) => sum + Number(t.total), 0);
                 const balanceClass = customer.balance < 0 ? 'text-red-600 dark:text-red-500' : 'text-green-600 dark:text-green-500';
 
@@ -854,7 +853,7 @@
         }
         
         async function addBalance(customerId, amount, paymentMethod) {
-            const customer = customers.find(c => c.id === customerId);
+            const customer = customers.find(c => c.id == customerId);
             const newBalance = Number(customer.balance) + amount;
             
             const { error: updateError } = await _supabase.from('customers').update({ balance: newBalance }).eq('id', customerId);
@@ -879,13 +878,13 @@
             if (currentOrder.length === 0) { showSimpleMessage('Atenção', 'O pedido está vazio.'); return; }
             if (!selectedPaymentMethod) { showSimpleMessage('Atenção', 'Selecione uma forma de pagamento.'); return; }
 
-            const customer = customers.find(c => c.id === customerId);
+            const customer = customers.find(c => c.id == customerId);
             const itemsSummary = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
             let total = 0;
             const transactionItems = [];
 
             for (const id in itemsSummary) {
-                const product = products.find(p => p.id === id);
+                const product = products.find(p => p.id == id);
                 const quantity = itemsSummary[id];
                 total += product.price * quantity;
                 transactionItems.push({ productId: id, name: product.name, price: product.price, quantity });
@@ -918,7 +917,7 @@
             }
             
             for (const item of transactionItems) {
-                const product = products.find(p => p.id === item.productId);
+                const product = products.find(p => p.id == item.productId);
                 const newStock = product.available_stock - item.quantity;
                 await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
             }
@@ -936,14 +935,14 @@
         }
         
         async function cancelSale(transactionId) {
-            const transaction = allTransactions.find(t => t.id === transactionId);
+            const transaction = allTransactions.find(t => t.id == transactionId);
             if (!transaction) {
                 showSimpleMessage('Erro', 'Transação não encontrada.');
                 return;
             }
 
             for (const item of transaction.items) {
-                 const product = products.find(p => p.id === item.productId);
+                 const product = products.find(p => p.id == item.productId);
                  if (product) {
                     const newStock = product.available_stock + item.quantity;
                     await _supabase.from('products').update({ available_stock: newStock }).eq('id', item.productId);
@@ -951,7 +950,7 @@
             }
 
             if (transaction.customer_id && (transaction.payment_method === 'Saldo' || transaction.payment_method === 'Pagar Depois')) {
-                const customer = customers.find(c => c.id === transaction.customer_id);
+                const customer = customers.find(c => c.id == transaction.customer_id);
                 if (customer) {
                     const newBalance = Number(customer.balance) + Number(transaction.total);
                     await _supabase.from('customers').update({ balance: newBalance }).eq('id', transaction.customer_id);
@@ -1014,7 +1013,7 @@
                 const items = tx.items.map(i => `${i.quantity}x ${i.name}`).join('; ');
                 let profit = 0;
                 tx.items.forEach(item => {
-                    const product = products.find(p => p.id === item.productId);
+                    const product = products.find(p => p.id == item.productId);
                     if (product && product.cost_price) profit += (item.price - product.cost_price) * item.quantity;
                 });
                 return [date, tx.customer_name, items, tx.total, profit.toFixed(2), tx.payment_method];
@@ -1026,7 +1025,7 @@
             const headers = ["ID", "Nome", "Telefone", "Responsavel", "SaldoAtual", "TotalGasto"];
             const rows = customers.map(c => {
                 const totalSpent = allTransactions
-                    .filter(t => t.customer_id === c.id)
+                    .filter(t => t.customer_id == c.id)
                     .reduce((sum, t) => sum + Number(t.total), 0);
                 return [c.id, c.name, c.phone, c.responsible_name || '', c.balance, totalSpent];
             });
@@ -1035,7 +1034,12 @@
 
         // --- MODAL HANDLERS ---
         function showEditProductModal(productId) {
-            const product = products.find(p => p.id === productId);
+            const product = products.find(p => p.id == productId);
+            if (!product) {
+                console.error("Produto não encontrado para edição:", productId);
+                showSimpleMessage("Erro", "Produto não encontrado. Tente atualizar a página.");
+                return;
+            }
             const content = `
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Editar Produto</h3>
@@ -1068,7 +1072,12 @@
         }
         
         function showAddBalanceModal(customerId) {
-            const customer = customers.find(c => c.id === customerId);
+            const customer = customers.find(c => c.id == customerId);
+            if (!customer) {
+                console.error("Cliente não encontrado para adicionar saldo:", customerId);
+                showSimpleMessage("Erro", "Cliente não encontrado. Tente atualizar a página.");
+                return;
+            }
             const content = `
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Saldo para ${customer.name}</h3>
@@ -1234,7 +1243,7 @@
                 if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('cursor-not-allowed')) {
                     const card = target.closest('.product-card');
                     const productId = card.dataset.id;
-                    const product = products.find(p => p.id === productId);
+                    const product = products.find(p => p.id == productId);
                     const itemsInCart = currentOrder.filter(id => id === productId).length;
                     
                     if (itemsInCart < product.available_stock) {
