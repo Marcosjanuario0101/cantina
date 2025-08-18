@@ -1,249 +1,304 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<!-- Adicionada a classe 'dark' para ativar o tema escuro -->
+<html lang="pt-BR" class="h-full bg-gray-100 dark:bg-gray-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cantina da Igreja v2.7 (Supabase)</title>
+    <title>Cantina do Acampamento | PDV Moderno</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- **NOVO**: Importa a biblioteca do Supabase -->
+    
+    <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Custom Styles for Modern UI -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .nav-link { transition: all 0.2s ease-in-out; }
-        .nav-link.active { background-color: #4f46e5; color: white; }
-        .nav-link:not(.active):hover { background-color: #e0e7ff; }
-        .product-card { transition: transform 0.1s ease-in-out; }
-        .product-card:active { transform: scale(0.95); }
-        .product-card.disabled { opacity: 0.5; cursor: not-allowed; }
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-            transition: opacity 0.3s ease;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .low-stock { color: #dc2626; font-weight: bold; animation: pulse 1.5s infinite; }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Style for active navigation link */
+        .nav-link.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        /* Animation for low stock items */
+        .low-stock { 
+            color: #ef4444; 
+            font-weight: 600; 
+            animation: pulse 1.5s infinite; 
+        }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            50% { opacity: 0.7; }
         }
-        .category-btn.active { background-color: #4f46e5; color: white; }
+        /* Style for active category/payment buttons */
+        .category-btn.active, .payment-btn.active { 
+            background-color: #4f46e5 !important; 
+            color: white !important; 
+            border-color: #4f46e5 !important;
+        }
+        /* Custom focus ring for better accessibility */
+        .focus-ring {
+            @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+        }
+        .dark .focus-ring {
+             @apply focus:ring-offset-gray-800;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-
-    <!-- O HTML da interface continua o mesmo -->
-    <div id="app-container" class="max-w-7xl mx-auto p-4">
-        <header class="bg-white rounded-lg shadow p-4 mb-6">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h1 class="text-3xl font-bold text-indigo-600">Cantina do Acampamento</h1>
-                    <p class="text-gray-500">Sistema de Ponto de Venda (PDV)</p>
-                </div>
-                <div>
-                    <label for="sale-date" class="block text-sm font-medium text-gray-700">Data da Venda</label>
-                    <input type="date" id="sale-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
+<body class="h-full">
+    <div id="app-container" class="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
+                <!-- ABAIXO É O LOCAL PARA COLOCAR UMA IMAGEM DE LOGO -->
+                <!-- Exemplo: <img src="url_da_sua_imagem.png" alt="Logo" class="h-8 w-auto"> -->
+                <h1 class="text-xl font-bold text-indigo-600 dark:text-indigo-400">Cantina do Acampamento</h1>
             </div>
-            <nav class="mt-4 border-b border-gray-200">
-                <ul class="flex flex-wrap -mb-px">
-                    <li><a href="#" id="nav-dashboard" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Dashboard</a></li>
-                    <li><a href="#" id="nav-pdv" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">PDV</a></li>
-                    <li><a href="#" id="nav-products" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Produtos</a></li>
-                    <li><a href="#" id="nav-customers" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Clientes</a></li>
-                    <li><a href="#" id="nav-reports" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Relatório de Vendas</a></li>
-                    <li><a href="#" id="nav-customer-reports" class="nav-link inline-block p-4 border-b-2 border-transparent rounded-t-lg">Relatório de Clientes</a></li>
+            <nav class="flex-1 overflow-y-auto p-4">
+                <ul class="space-y-2">
+                    <!-- Navigation Links -->
+                    <li><a href="#" id="nav-dashboard" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>Dashboard</a></li>
+                    <li><a href="#" id="nav-pdv" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>PDV</a></li>
+                    <li><a href="#" id="nav-products" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>Produtos</a></li>
+                    <li><a href="#" id="nav-customers" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>Clientes</a></li>
+                    <li><a href="#" id="nav-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>Rel. Vendas</a></li>
+                    <li><a href="#" id="nav-customer-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" /></svg>Rel. Clientes</a></li>
                 </ul>
             </nav>
-        </header>
+        </aside>
 
-        <main id="main-content">
-            <div id="loading-view" class="text-center p-10">
-                <p class="text-lg text-gray-600">Conectando ao banco de dados...</p>
-            </div>
-            <div id="dashboard-view" class="hidden">
-                 <h2 class="text-2xl font-semibold mb-4">Painel de Controle (Hoje)</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-medium text-gray-500">Vendas Totais do Dia</h3>
-                        <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-medium text-gray-500">Produtos Mais Vendidos</h3>
-                        <ul id="dashboard-top-products" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-medium text-gray-500">Últimas Transações</h3>
-                        <ul id="dashboard-recent-transactions" class="mt-2 space-y-1 text-sm text-gray-700"></ul>
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-end px-6 flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <label for="sale-date" class="text-sm font-medium text-gray-700 dark:text-gray-300">Data da Venda:</label>
+                    <input type="date" id="sale-date" class="w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 rounded-md shadow-sm py-2 px-3 text-sm focus-ring">
+                </div>
+            </header>
+
+            <main id="main-content" class="flex-1 overflow-y-auto p-6">
+                <!-- Loading View -->
+                <div id="loading-view" class="flex items-center justify-center h-full">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">Conectando ao banco de dados...</p>
                     </div>
                 </div>
-            </div>
-            <div id="pdv-view" class="hidden">
-                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-2xl font-semibold">Selecione os Produtos</h2>
+
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="hidden">
+                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Painel de Controle (Hoje)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-base font-medium text-gray-500 dark:text-gray-400">Vendas Totais do Dia</h3>
+                            <p id="dashboard-total-sales" class="text-3xl font-bold text-green-600 dark:text-green-500 mt-2">R$ 0,00</p>
                         </div>
-                        <div id="category-filters" class="flex flex-wrap gap-2 mb-4"></div>
-                        <div id="product-list-pdv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-base font-medium text-gray-500 dark:text-gray-400">Produtos Mais Vendidos</h3>
+                            <ul id="dashboard-top-products" class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-300"></ul>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-base font-medium text-gray-500 dark:text-gray-400">Últimas Transações</h3>
+                            <ul id="dashboard-recent-transactions" class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-300"></ul>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-2xl font-semibold mb-4">Pedido Atual</h2>
-                        <div class="mb-4">
-                            <label for="customer-select" class="block text-sm font-medium text-gray-700">Cliente</label>
-                            <div class="flex gap-2 mt-1">
-                                <select id="customer-select" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"></select>
-                                <button id="add-customer-pdv-btn" class="bg-indigo-100 text-indigo-700 p-2 rounded-md hover:bg-indigo-200">+</button>
+                </div>
+
+                <!-- PDV View -->
+                <div id="pdv-view" class="hidden">
+                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Selecione os Produtos</h2>
+                            <div id="category-filters" class="flex flex-wrap gap-2 my-4 border-b pb-4 border-gray-200 dark:border-gray-700"></div>
+                            <div id="product-list-pdv" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto p-1"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col">
+                            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Pedido Atual</h2>
+                            <div class="mb-4">
+                                <label for="customer-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente</label>
+                                <div class="flex gap-2">
+                                    <select id="customer-select" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 rounded-md shadow-sm focus-ring"></select>
+                                    <button id="add-customer-pdv-btn" class="flex-shrink-0 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 p-2 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-900 text-xl font-bold leading-none focus-ring">+</button>
+                                </div>
+                            </div>
+                            <div id="current-order" class="space-y-2 mb-4 flex-1 overflow-y-auto border-t border-b border-gray-200 dark:border-gray-700 py-4"></div>
+                            <div class="mt-auto">
+                                <div class="text-right mb-4">
+                                    <p class="text-lg font-semibold">Total: <span id="order-total" class="text-indigo-600 dark:text-indigo-400 text-2xl">R$ 0,00</span></p>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Forma de Pagamento</label>
+                                    <!-- Botões de pagamento ajustados para melhor responsividade -->
+                                    <div id="payment-method" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <button data-method="Saldo" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Saldo</button>
+                                        <button data-method="Pagar Depois" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Pagar Depois</button>
+                                        <button data-method="PIX" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">PIX</button>
+                                        <button data-method="Dinheiro" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Dinheiro</button>
+                                        <button data-method="Cartão" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Cartão</button>
+                                    </div>
+                                </div>
+                                <button id="finalize-sale-btn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors focus-ring">
+                                    Finalizar Compra
+                                </button>
                             </div>
                         </div>
-                        <div id="current-order" class="space-y-2 mb-4 min-h-[100px] border-b pb-4"></div>
-                        <div class="text-right">
-                            <p class="text-lg font-semibold">Total: <span id="order-total" class="text-indigo-600">R$ 0,00</span></p>
-                        </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
-                            <div id="payment-method" class="mt-2 grid grid-cols-2 gap-2">
-                                <button data-method="Saldo" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Saldo</button>
-                                <button data-method="Pagar Depois" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Pagar Depois</button>
-                                <button data-method="PIX" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">PIX</button>
-                                <button data-method="Dinheiro" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Dinheiro</button>
-                                <button data-method="Cartão" class="payment-btn bg-gray-200 text-gray-800 py-2 rounded-md">Cartão</button>
-                            </div>
-                        </div>
-                        <button id="finalize-sale-btn" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400">
-                            Finalizar Compra
-                        </button>
                     </div>
                 </div>
-            </div>
-            <div id="products-view" class="hidden bg-white p-6 rounded-lg shadow">
-                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold">Gerenciar Produtos</h2>
-                    <div class="flex gap-2">
-                        <button id="add-category-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Adicionar Categoria</button>
-                        <button id="export-products-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
-                    </div>
-                </div>
-                <form id="add-product-form" class="mb-6 grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-                    <div>
-                        <label for="product-name" class="block text-sm font-medium text-gray-700">Nome</label>
-                        <input type="text" id="product-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                     <div>
-                        <label for="product-category" class="block text-sm font-medium text-gray-700">Categoria</label>
-                        <select id="product-category" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select>
-                    </div>
-                    <div>
-                        <label for="product-cost-price" class="block text-sm font-medium text-gray-700">Preço Custo</label>
-                        <input type="number" id="product-cost-price" step="0.01" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="product-price" class="block text-sm font-medium text-gray-700">Preço Venda</label>
-                        <input type="number" id="product-price" step="0.01" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="product-initial-stock" class="block text-sm font-medium text-gray-700">Estoque</label>
-                        <input type="number" id="product-initial-stock" step="1" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <button type="submit" class="sm:col-span-5 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 h-fit">Adicionar Produto</button>
-                </form>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preço Venda</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="product-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="customers-view" class="hidden bg-white p-6 rounded-lg shadow">
-                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold">Gerenciar Clientes</h2>
-                    <button id="export-customers-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
-                </div>
-                <button id="add-customer-view-btn" class="mb-6 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Adicionar Novo Cliente</button>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Saldo</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customer-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="reports-view" class="hidden bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold">Relatório de Vendas</h2>
-                    <div class="flex items-center gap-4">
-                        <div>
-                            <label for="report-date-start" class="block text-sm font-medium text-gray-700">De:</label>
-                            <input type="date" id="report-date-start" class="border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                        </div>
-                        <div>
-                            <label for="report-date-end" class="block text-sm font-medium text-gray-700">Até:</label>
-                            <input type="date" id="report-date-end" class="border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                
+                <!-- Products View -->
+                <div id="products-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Gerenciar Produtos</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <button id="add-category-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors focus-ring text-sm">Adicionar Categoria</button>
+                            <button id="export-products-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors focus-ring text-sm">Exportar para CSV</button>
                         </div>
                     </div>
+                    <form id="add-product-form" class="mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                            <div class="sm:col-span-2 lg:col-span-1"><label for="product-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label><input type="text" id="product-name" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                            <div><label for="product-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label><select id="product-category" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></select></div>
+                            <div><label for="product-cost-price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço Custo</label><input type="number" id="product-cost-price" step="0.01" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                            <div><label for="product-price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço Venda</label><input type="number" id="product-price" step="0.01" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                            <div><label for="product-initial-stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estoque</label><input type="number" id="product-initial-stock" step="1" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus-ring">Adicionar</button>
+                        </div>
+                    </form>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoria</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Preço Venda</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estoque</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-list-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600">R$ 0,00</p></div>
-                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600">R$ 0,00</p></div>
-                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Vendas</h4><p id="period-transactions" class="text-xl font-bold">0</p></div>
-                    <div class="bg-gray-50 p-4 rounded-lg"><h4 class="text-sm font-medium text-gray-500">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold">0</p></div>
+
+                <!-- Customers View -->
+                <div id="customers-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Gerenciar Clientes</h2>
+                        <div class="flex gap-2 flex-wrap">
+                             <button id="add-customer-view-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus-ring text-sm">Adicionar Cliente</button>
+                             <button id="export-customers-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm">Exportar para CSV</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Telefone</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saldo</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customer-list-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-inner mb-6">
-                    <h3 class="text-lg font-semibold mb-2">Fechamento de Caixa</h3>
-                    <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
+                
+                <!-- Sales Report View -->
+                <div id="reports-view" class="hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Relatório de Vendas</h2>
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div><label for="report-date-start" class="block text-sm font-medium text-gray-700 dark:text-gray-300">De:</label><input type="date" id="report-date-start" class="mt-1 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                            <div><label for="report-date-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Até:</label><input type="date" id="report-date-end" class="mt-1 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600 dark:text-green-500">R$ 0,00</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600 dark:text-blue-500">R$ 0,00</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Vendas</h4><p id="period-transactions" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
+                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700 mb-6">
+                        <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Fechamento de Caixa</h3>
+                        <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
+                    </div>
+                    <div class="flex justify-end mb-4">
+                        <button id="export-sales-report-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm">Exportar para CSV</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Itens</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pagamento</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lucro</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-list-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="flex justify-end mb-4">
-                    <button id="export-sales-report-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
+                
+                <!-- Customer Reports View -->
+                <div id="customer-reports-view" class="hidden">
+                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0">Relatório de Clientes</h2>
+                        <button id="export-customer-report-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus-ring text-sm">Exportar para CSV</button>
+                    </div>
+                    <div id="customer-report-container" class="space-y-6"></div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Itens</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pagamento</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lucro</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactions-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="customer-reports-view" class="hidden bg-white p-6 rounded-lg shadow">
-                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold">Relatório de Clientes</h2>
-                    <button id="export-customer-report-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Exportar para CSV</button>
-                </div>
-                <div id="customer-report-container" class="space-y-6">
-                </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
-    <!-- Modals -->
-    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
-    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
-    <div id="edit-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
-    <div id="add-balance-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
-    <div id="add-customer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop overflow-y-auto p-4"></div>
-    <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop"></div>
+    <!-- Modals Area -->
+    <div id="message-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
+    <div id="edit-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
+    <div id="add-balance-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
+    <div id="add-customer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 overflow-y-auto"></div>
+    <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
 
 
+    <!-- JAVASCRIPT LOGIC (UNCHANGED) -->
     <script type="module">
         // --- CONFIGURAÇÃO INICIAL DO SUPABASE ---
         const SUPABASE_URL = 'https://tajxtakefalzlrizkpqq.supabase.co';
@@ -308,11 +363,11 @@
         
         function showSimpleMessage(title, message) {
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">${title}</h3>
-                    <div class="mt-2"><p class="text-sm text-gray-500">${message}</p></div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto animate-scale-in">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-gray-500 dark:text-gray-400">${message}</p></div>
                     <div class="mt-4">
-                        <button id="simple-message-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none">OK</button>
+                        <button id="simple-message-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus-ring">OK</button>
                     </div>
                 </div>`;
             showModal('message-modal', content);
@@ -322,12 +377,12 @@
         function showConfirmModal(title, message, callback) {
             onConfirmCallback = callback;
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">${title}</h3>
-                    <div class="mt-2"><p class="text-sm text-gray-500">${message}</p></div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto animate-scale-in">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">${title}</h3>
+                    <div class="mt-2"><p class="text-sm text-gray-500 dark:text-gray-400">${message}</p></div>
                     <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                        <button id="confirm-modal-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:col-start-2 sm:text-sm">Confirmar</button>
-                        <button id="confirm-modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:col-start-1 sm:text-sm">Cancelar</button>
+                        <button id="confirm-modal-confirm-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 sm:col-start-2 sm:text-sm focus-ring">Confirmar</button>
+                        <button id="confirm-modal-cancel-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:col-start-1 sm:text-sm focus-ring">Cancelar</button>
                     </div>
                 </div>`;
             showModal('confirm-modal', content);
@@ -362,18 +417,18 @@
             }, {});
             const topProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
             const topProductsList = document.getElementById('dashboard-top-products');
-            topProductsList.innerHTML = topProducts.map(p => `<li><span class="font-semibold">${p[1]}x</span> ${p[0]}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
+            topProductsList.innerHTML = topProducts.map(p => `<li><span class="font-semibold bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-md">${p[1]}x</span> ${p[0]}</li>`).join('') || '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda hoje.</li>';
 
             const recentTransactions = todaysTransactions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
             const recentTransactionsList = document.getElementById('dashboard-recent-transactions');
-            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li>${t.customer_name} - R$ ${Number(t.total).toFixed(2)}</li>`).join('') || '<li>Nenhuma venda hoje.</li>';
+            recentTransactionsList.innerHTML = recentTransactions.map(t => `<li class="flex justify-between"><span>${t.customer_name}</span> <span class="font-semibold">R$ ${Number(t.total).toFixed(2)}</span></li>`).join('') || '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda hoje.</li>';
         }
         
         function renderCategoryOptions(selectElementId, selectedCategory = null) {
             const select = document.getElementById(selectElementId);
             if (!select) return;
             select.innerHTML = '<option value="">Selecione uma categoria</option>';
-            categories.forEach(cat => {
+            categories.sort((a, b) => a.name.localeCompare(b.name)).forEach(cat => {
                 const selected = cat.name === selectedCategory ? 'selected' : '';
                 select.innerHTML += `<option value="${cat.name}" ${selected}>${cat.name}</option>`;
             });
@@ -381,9 +436,9 @@
 
         function renderCategoryFilters() {
             const container = document.getElementById('category-filters');
-            container.innerHTML = `<button class="category-btn active bg-gray-200 py-1 px-3 rounded-full text-sm" data-category="all">Todos</button>`;
-            categories.forEach(cat => {
-                container.innerHTML += `<button class="category-btn bg-gray-200 py-1 px-3 rounded-full text-sm" data-category="${cat.name}">${cat.name}</button>`;
+            container.innerHTML = `<button class="category-btn active border border-transparent text-white bg-indigo-600 py-1 px-3 rounded-full text-sm transition-colors" data-category="all">Todos</button>`;
+            categories.sort((a, b) => a.name.localeCompare(b.name)).forEach(cat => {
+                container.innerHTML += `<button class="category-btn border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 py-1 px-3 rounded-full text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" data-category="${cat.name}">${cat.name}</button>`;
             });
         }
 
@@ -399,17 +454,17 @@
             const tableBody = document.getElementById('product-list-table');
             if (!tableBody) return;
             tableBody.innerHTML = '';
-            products.forEach(p => {
+            products.sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
                 const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : '';
                 tableBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${p.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${p.category}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${Number(p.price).toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ${stockClass}">${p.available_stock}</td>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">${p.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${p.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">R$ ${Number(p.price).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><span class="${stockClass}">${p.available_stock}</span></td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button data-id="${p.id}" class="edit-product-btn text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
-                            <button data-id="${p.id}" class="delete-product-btn text-red-600 hover:text-red-900">Excluir</button>
+                            <button data-id="${p.id}" class="edit-product-btn text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3 font-semibold">Editar</button>
+                            <button data-id="${p.id}" class="delete-product-btn text-red-600 dark:text-red-500 hover:text-red-900 dark:hover:text-red-400 font-semibold">Excluir</button>
                         </td>
                     </tr>`;
             });
@@ -419,14 +474,14 @@
             const container = document.getElementById('product-list-pdv');
             if (!container) return;
             container.innerHTML = '';
-            productsToRender.forEach(p => {
-                const disabled = p.available_stock <= 0 ? 'disabled' : '';
-                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'text-blue-600';
+            productsToRender.sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
+                const disabled = p.available_stock <= 0 ? 'opacity-50 cursor-not-allowed' : '';
+                const stockClass = p.available_stock <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'text-blue-600 dark:text-blue-400';
                 container.innerHTML += `
-                    <div class="product-card cursor-pointer bg-gray-50 border rounded-lg p-3 text-center hover:bg-indigo-100 hover:border-indigo-500 ${disabled}" data-id="${p.id}">
-                        <p class="font-semibold text-sm">${p.name}</p>
-                        <p class="text-xs text-gray-600">R$ ${Number(p.price).toFixed(2)}</p>
-                        <p class="text-xs ${stockClass}">Estoque: ${p.available_stock}</p>
+                    <div class="product-card cursor-pointer bg-white dark:bg-gray-700/50 border rounded-lg p-3 text-center border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:shadow-md transition-all duration-200 ${disabled}" data-id="${p.id}">
+                        <p class="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">${p.name}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">R$ ${Number(p.price).toFixed(2)}</p>
+                        <p class="text-xs mt-1 font-medium ${stockClass}">Estoque: ${p.available_stock}</p>
                     </div>`;
             });
         }
@@ -435,16 +490,16 @@
             const tableBody = document.getElementById('customer-list-table');
             if (!tableBody) return;
             tableBody.innerHTML = '';
-            customers.forEach(c => {
-                const balanceClass = c.balance < 0 ? 'text-red-600' : 'text-gray-500';
+            customers.sort((a, b) => a.name.localeCompare(b.name)).forEach(c => {
+                const balanceClass = c.balance < 0 ? 'text-red-600 dark:text-red-500' : 'text-gray-500 dark:text-gray-400';
                 tableBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${c.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${c.phone}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm ${balanceClass}">R$ ${Number(c.balance).toFixed(2)}</td>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">${c.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${c.phone}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${balanceClass}">R$ ${Number(c.balance).toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button data-id="${c.id}" class="add-balance-btn text-green-600 hover:text-green-900 mr-3">Adicionar Saldo</button>
-                            <button data-id="${c.id}" class="delete-customer-btn text-red-600 hover:text-red-900">Excluir</button>
+                            <button data-id="${c.id}" class="add-balance-btn text-green-600 dark:text-green-500 hover:text-green-900 dark:hover:text-green-400 mr-3 font-semibold">Adicionar Saldo</button>
+                            <button data-id="${c.id}" class="delete-customer-btn text-red-600 dark:text-red-500 hover:text-red-900 dark:hover:text-red-400 font-semibold">Excluir</button>
                         </td>
                     </tr>`;
             });
@@ -453,17 +508,25 @@
         function renderCustomersSelect() {
             const select = document.getElementById('customer-select');
             if (!select) return;
+            const selectedValue = select.value;
             select.innerHTML = '<option value="">Cliente Avulso</option>';
-            customers.forEach(c => {
+            customers.sort((a, b) => a.name.localeCompare(b.name)).forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.name} (Saldo: R$ ${Number(c.balance).toFixed(2)})</option>`;
             });
+            select.value = selectedValue;
         }
 
         function renderCurrentOrder() {
             const orderContainer = document.getElementById('current-order');
             const totalEl = document.getElementById('order-total');
             if (!orderContainer || !totalEl) return;
-            orderContainer.innerHTML = '';
+            
+            if (currentOrder.length === 0) {
+                orderContainer.innerHTML = `<div class="text-center text-gray-500 dark:text-gray-400 py-8">Seu carrinho está vazio.</div>`;
+            } else {
+                orderContainer.innerHTML = '';
+            }
+            
             let total = 0;
 
             const itemsCount = currentOrder.reduce((acc, id) => ({ ...acc, [id]: (acc[id] || 0) + 1 }), {});
@@ -474,14 +537,15 @@
                     const count = itemsCount[id];
                     total += product.price * count;
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = 'flex justify-between items-center text-sm py-1';
+                    itemDiv.className = 'flex justify-between items-center text-sm py-2';
                     itemDiv.innerHTML = `
                         <div>
-                            <span class="font-medium">${count}x ${product.name}</span>
+                            <span class="font-medium text-gray-800 dark:text-gray-200">${product.name}</span>
+                            <span class="text-gray-500 dark:text-gray-400 ml-2">(${count}x)</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                             <span class="text-gray-600">R$ ${(product.price * count).toFixed(2)}</span>
-                             <button data-id="${id}" class="remove-from-cart-btn bg-red-100 text-red-600 rounded-full w-5 h-5 flex items-center justify-center font-bold text-xs hover:bg-red-200">&times;</button>
+                        <div class="flex items-center gap-3">
+                             <span class="text-gray-700 dark:text-gray-300 font-semibold">R$ ${(product.price * count).toFixed(2)}</span>
+                             <button data-id="${id}" class="remove-from-cart-btn bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs hover:bg-red-200 dark:hover:bg-red-900 transition-colors focus-ring">&times;</button>
                         </div>
                     `;
                     orderContainer.appendChild(itemDiv);
@@ -507,7 +571,7 @@
             let periodItems = 0;
             const cashClosing = {};
 
-            transactionsForReport.forEach(tx => {
+            transactionsForReport.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(tx => {
                 const txDate = new Date(tx.created_at);
                 const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
                 let transactionProfit = 0;
@@ -519,15 +583,15 @@
                 });
                 
                 tableBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${txDate.toLocaleString('pt-BR')}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${tx.customer_name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${itemsStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tx.payment_method}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">R$ ${transactionProfit.toFixed(2)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${Number(tx.total).toFixed(2)}</td>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${txDate.toLocaleString('pt-BR')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">${tx.customer_name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">${itemsStr}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300">${tx.payment_method}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-semibold">R$ ${transactionProfit.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200 font-semibold">R$ ${Number(tx.total).toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 hover:text-red-900">Cancelar</button>
+                            <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 dark:text-red-500 hover:text-red-900 dark:hover:text-red-400 font-semibold">Cancelar</button>
                         </td>
                     </tr>`;
                 periodTotal += Number(tx.total);
@@ -544,52 +608,52 @@
             periodItemsEl.textContent = periodItems;
             
             cashClosingSummaryEl.innerHTML = Object.entries(cashClosing)
-                .map(([method, total]) => `<div><span class="font-semibold">${method}:</span> R$ ${total.toFixed(2)}</div>`)
-                .join('') || 'Nenhum recebimento em caixa.';
+                .map(([method, total]) => `<div><span class="font-semibold text-gray-600 dark:text-gray-400">${method}:</span> <span class="text-gray-800 dark:text-gray-200 font-bold">R$ ${total.toFixed(2)}</span></div>`)
+                .join('') || '<p class="text-gray-500 dark:text-gray-400 col-span-full">Nenhum recebimento em caixa no período.</p>';
         }
         
         function renderCustomerReports() {
             const container = document.getElementById('customer-report-container');
             if (!container) return;
             container.innerHTML = '';
-            customers.forEach(customer => {
+            customers.sort((a, b) => a.name.localeCompare(b.name)).forEach(customer => {
                 const customerTransactions = allTransactions.filter(t => t.customer_id === customer.id);
                 const customerBalanceLogs = balanceLogs.filter(l => l.customer_id === customer.id);
                 const totalSpent = customerTransactions.reduce((sum, t) => sum + Number(t.total), 0);
-                const balanceClass = customer.balance < 0 ? 'text-red-600' : 'text-green-600';
+                const balanceClass = customer.balance < 0 ? 'text-red-600 dark:text-red-500' : 'text-green-600 dark:text-green-500';
 
-                let purchasesHtml = '<p class="text-sm text-gray-500">Nenhuma compra registrada.</p>';
+                let purchasesHtml = '<p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma compra registrada.</p>';
                 if (customerTransactions.length > 0) {
                     purchasesHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
                     customerTransactions.forEach(tx => {
                         tx.items.forEach(item => {
-                            purchasesHtml += `<li class="text-sm text-gray-700">${item.quantity}x ${item.name} - R$ ${Number(item.price).toFixed(2)} (em ${new Date(tx.created_at).toLocaleDateString()})</li>`;
+                            purchasesHtml += `<li class="text-sm text-gray-700 dark:text-gray-300">${item.quantity}x ${item.name} - R$ ${Number(item.price).toFixed(2)} (em ${new Date(tx.created_at).toLocaleDateString()})</li>`;
                         });
                     });
                     purchasesHtml += '</ul>';
                 }
                 
-                let balanceLogHtml = '<p class="text-sm text-gray-500">Nenhuma recarga registrada.</p>';
+                let balanceLogHtml = '<p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma recarga registrada.</p>';
                  if (customerBalanceLogs.length > 0) {
                     balanceLogHtml = '<ul class="list-disc list-inside space-y-1 mt-2">';
                     customerBalanceLogs.forEach(log => {
-                        balanceLogHtml += `<li class="text-sm text-gray-700">+ R$ ${Number(log.amount).toFixed(2)} (${log.payment_method}) em ${new Date(log.created_at).toLocaleDateString()}</li>`;
+                        balanceLogHtml += `<li class="text-sm text-gray-700 dark:text-gray-300">+ R$ ${Number(log.amount).toFixed(2)} (${log.payment_method}) em ${new Date(log.created_at).toLocaleDateString()}</li>`;
                     });
                     balanceLogHtml += '</ul>';
                 }
 
                 container.innerHTML += `
-                    <div class="bg-white p-4 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold text-indigo-700">${customer.name}</h3>
-                        <div class="grid grid-cols-2 gap-4 mt-2 text-sm">
-                            <div><span class="font-semibold">Telefone:</span> ${customer.phone}</div>
-                            <div><span class="font-semibold">Responsável:</span> ${customer.responsible_name || 'N/A'}</div>
-                            <div><span class="font-semibold">Total Gasto:</span> R$ ${totalSpent.toFixed(2)}</div>
-                            <div><span class="font-semibold">Saldo Atual:</span> <span class="${balanceClass}">R$ ${Number(customer.balance).toFixed(2)}</span></div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-indigo-700 dark:text-indigo-400">${customer.name}</h3>
+                        <div class="grid grid-cols-2 gap-4 mt-2 text-sm border-b pb-4 mb-4 border-gray-200 dark:border-gray-700">
+                            <div><span class="font-semibold text-gray-600 dark:text-gray-400">Telefone:</span> ${customer.phone || 'N/A'}</div>
+                            <div><span class="font-semibold text-gray-600 dark:text-gray-400">Responsável:</span> ${customer.responsible_name || 'N/A'}</div>
+                            <div><span class="font-semibold text-gray-600 dark:text-gray-400">Total Gasto:</span> R$ ${totalSpent.toFixed(2)}</div>
+                            <div><span class="font-semibold text-gray-600 dark:text-gray-400">Saldo Atual:</span> <span class="font-bold text-lg ${balanceClass}">R$ ${Number(customer.balance).toFixed(2)}</span></div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <div><h4 class="font-semibold text-md">Histórico de Compras:</h4>${purchasesHtml}</div>
-                            <div><h4 class="font-semibold text-md">Histórico de Recargas:</h4>${balanceLogHtml}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><h4 class="font-semibold text-md text-gray-800 dark:text-gray-200">Histórico de Compras:</h4>${purchasesHtml}</div>
+                            <div><h4 class="font-semibold text-md text-gray-800 dark:text-gray-200">Histórico de Recargas:</h4>${balanceLogHtml}</div>
                         </div>
                     </div>
                 `;
@@ -702,8 +766,6 @@
             if (response.error) {
                 console.error("Erro ao salvar produto:", response.error);
                 showSimpleMessage("Erro", "Não foi possível salvar as informações do produto.");
-            } else {
-                fetchAndRenderProducts();
             }
         }
         
@@ -711,8 +773,6 @@
             const { error } = await _supabase.from('products').delete().eq('id', id);
             if (error) {
                 console.error("Erro ao excluir produto:", error);
-            } else {
-                fetchAndRenderProducts();
             }
         }
         
@@ -739,12 +799,10 @@
                     payment_method: paymentMethod
                 }]);
             }
-            fetchAndRenderCustomers();
             return data;
         }
         
         async function deleteCustomer(id) {
-            // Primeiro, apaga os registros dependentes em 'balance_logs'
             const { error: logError } = await _supabase.from('balance_logs').delete().eq('customer_id', id);
             if (logError) {
                 console.error("Erro ao excluir logs de saldo do cliente:", logError);
@@ -752,7 +810,6 @@
                 return;
             }
 
-            // Segundo, apaga os registros dependentes em 'transactions'
             const { error: transError } = await _supabase.from('transactions').delete().eq('customer_id', id);
              if (transError) {
                 console.error("Erro ao excluir transações do cliente:", transError);
@@ -760,13 +817,10 @@
                 return;
             }
 
-            // Finalmente, apaga o cliente
             const { error: customerError } = await _supabase.from('customers').delete().eq('id', id);
             if (customerError) {
                 console.error("Erro ao excluir cliente:", customerError);
                 showSimpleMessage("Erro", `Não foi possível excluir o cliente. Detalhes: ${customerError.message}`);
-            } else {
-                fetchAndRenderCustomers();
             }
         }
         
@@ -784,9 +838,6 @@
             }]);
             if(logError) {
                 console.error("Erro ao registrar log de saldo:", logError);
-            } else {
-                fetchAndRenderCustomers();
-                fetchAndRenderBalanceLogs();
             }
         }
 
@@ -850,10 +901,9 @@
 
             showSimpleMessage('Sucesso!', 'Venda finalizada com sucesso!');
             currentOrder = [];
+            selectedPaymentMethod = null;
+            document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
             renderCurrentOrder();
-            fetchAndRenderProducts();
-            fetchAndRenderCustomers();
-            fetchAndRenderAllTransactions();
         }
         
         async function cancelSale(transactionId) {
@@ -886,8 +936,6 @@
                 showSimpleMessage('Erro', 'Não foi possível cancelar a venda.');
             } else {
                 showSimpleMessage('Sucesso', 'Venda cancelada com sucesso!');
-                fetchAndRenderProducts();
-                fetchAndRenderCustomers();
             }
         }
 
@@ -896,12 +944,10 @@
             if (error) {
                 console.error("Erro ao adicionar categoria:", error);
                 showSimpleMessage("Erro", "Não foi possível adicionar a categoria. Ela já existe?");
-            } else {
-                fetchAndRenderCategories();
             }
         }
 
-        // --- LÓGICA DE EXPORTAÇÃO (Adaptada para Supabase) ---
+        // --- LÓGICA DE EXPORTAÇÃO ---
         function exportToCSV(headers, rows, filename) {
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
             
@@ -958,22 +1004,22 @@
             exportToCSV(headers, rows, "relatorio_clientes.csv");
         }
 
-        // --- MODAL HANDLERS (Adaptados para Supabase) ---
+        // --- MODAL HANDLERS ---
         function showEditProductModal(productId) {
             const product = products.find(p => p.id === productId);
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-                    <h3 class="text-lg font-medium">Editar Produto</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Editar Produto</h3>
                     <div class="mt-4 space-y-4">
-                        <div><label class="block text-sm">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border rounded-md p-2"></select></div>
-                        <div><label class="block text-sm">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="mt-1 block w-full border rounded-md p-2"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button id="edit-product-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
-                        <button id="save-product-changes" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                        <button id="edit-product-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
+                        <button id="save-product-changes" class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 focus-ring">Salvar</button>
                     </div>
                 </div>`;
             showModal('edit-product-modal', content);
@@ -995,15 +1041,15 @@
         function showAddBalanceModal(customerId) {
             const customer = customers.find(c => c.id === customerId);
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
-                    <h3 class="text-lg font-medium">Adicionar Saldo para ${customer.name}</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Saldo para ${customer.name}</h3>
                     <div class="mt-4 space-y-4">
-                        <div><label class="block text-sm">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Forma de Pagamento</label><select id="add-balance-payment-method" class="mt-1 block w-full border rounded-md p-2"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento</label><select id="add-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button id="add-balance-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
-                        <button id="save-balance-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Adicionar</button>
+                        <button id="add-balance-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
+                        <button id="save-balance-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 focus-ring">Adicionar</button>
                     </div>
                 </div>`;
             showModal('add-balance-modal', content);
@@ -1022,18 +1068,18 @@
         
         function showAddCustomerModal(callback) {
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-auto">
-                    <h3 class="text-lg font-medium">Adicionar Novo Cliente</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-auto">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Novo Cliente</h3>
                     <form id="modal-add-customer-form" class="mt-4 space-y-4">
-                        <div><label class="block text-sm">Nome Completo*</label><input type="text" id="modal-customer-name" required class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Telefone*</label><input type="tel" id="modal-customer-phone" required class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Limite de Crédito (Ex: 50 para R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div><label class="block text-sm">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="mt-1 block w-full border rounded-md p-2"></div>
-                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="mt-1 block w-full border rounded-md p-2"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo*</label><input type="text" id="modal-customer-name" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefone</label><input type="tel" id="modal-customer-phone" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Limite de Crédito (Ex: 50 para -R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
                         <div class="mt-6 flex justify-end gap-3">
-                            <button type="button" id="add-customer-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
-                            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar Cliente</button>
+                            <button type="button" id="add-customer-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
+                            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 focus-ring">Salvar Cliente</button>
                         </div>
                     </form>
                 </div>`;
@@ -1048,14 +1094,14 @@
 
             document.getElementById('modal-add-customer-form').onsubmit = async (e) => {
                 e.preventDefault();
-                const phone = document.getElementById('modal-customer-phone').value;
-                if (!phone) {
-                    showSimpleMessage('Erro', 'O campo Telefone é obrigatório.');
+                const name = document.getElementById('modal-customer-name').value;
+                 if (!name) {
+                    showSimpleMessage('Erro', 'O campo Nome é obrigatório.');
                     return;
                 }
                 const customerData = {
-                    name: document.getElementById('modal-customer-name').value,
-                    phone: phone,
+                    name: name,
+                    phone: document.getElementById('modal-customer-phone').value,
                     responsibleName: document.getElementById('modal-customer-responsible').value,
                     balance: parseFloat(balanceInput.value) || 0,
                     creditLimit: -Math.abs(parseFloat(document.getElementById('modal-customer-limit').value)) || 0,
@@ -1069,15 +1115,15 @@
 
         function showAddCategoryModal() {
             const content = `
-                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
-                    <h3 class="text-lg font-medium">Adicionar Nova Categoria</h3>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-auto">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Nova Categoria</h3>
                     <div class="mt-4">
-                        <label class="block text-sm">Nome da Categoria</label>
-                        <input id="new-category-name" type="text" class="mt-1 block w-full border rounded-md p-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Categoria</label>
+                        <input id="new-category-name" type="text" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring">
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
-                        <button id="add-category-cancel-btn" class="bg-gray-200 py-2 px-4 rounded-md">Cancelar</button>
-                        <button id="add-category-save-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Salvar</button>
+                        <button id="add-category-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
+                        <button id="add-category-save-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 focus-ring">Salvar</button>
                     </div>
                 </div>`;
             showModal('add-category-modal', content);
@@ -1158,7 +1204,7 @@
                  if (target.classList.contains('cancel-sale-btn')) {
                     showConfirmModal('Cancelar Venda?', 'O estoque será devolvido e o saldo do cliente estornado. Esta ação não pode ser desfeita.', () => cancelSale(target.dataset.id));
                 }
-                if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('disabled')) {
+                if (target.closest('.product-card') && !target.closest('.product-card').classList.contains('cursor-not-allowed')) {
                     const card = target.closest('.product-card');
                     const productId = card.dataset.id;
                     const product = products.find(p => p.id === productId);
@@ -1172,8 +1218,8 @@
                     }
                 }
                 if (target.classList.contains('payment-btn')) {
-                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.replace('bg-indigo-600', 'bg-gray-200'));
-                    target.classList.replace('bg-gray-200', 'bg-indigo-600');
+                    document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
+                    target.classList.add('active');
                     selectedPaymentMethod = target.dataset.method;
                 }
                 if (target.classList.contains('category-btn')) {
