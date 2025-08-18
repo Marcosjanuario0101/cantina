@@ -76,34 +76,56 @@
         .dark .focus-ring {
              @apply focus:ring-offset-gray-800;
         }
+        /* Sidebar transition */
+        #sidebar {
+            transition: width 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="h-full">
     <div id="app-container" class="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
         <!-- Sidebar Navigation -->
-        <aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <aside id="sidebar" class="w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
             <div class="h-16 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
                 <!-- ABAIXO É O LOCAL PARA COLOCAR UMA IMAGEM DE LOGO -->
                 <!-- Exemplo: <img src="url_da_sua_imagem.png" alt="Logo" class="h-8 w-auto"> -->
-                <h1 class="text-xl font-bold text-indigo-600 dark:text-indigo-400">Cantina do Acampamento</h1>
+                <img src="https://semdescullpas.com.br/wp-content/uploads/2025/07/Group-1-1-2048x473.png" alt="Logo" class="h-8 w-auto"> 
             </div>
             <nav class="flex-1 overflow-y-auto p-4">
                 <ul class="space-y-2">
                     <!-- Navigation Links -->
-                    <li><a href="#" id="nav-dashboard" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>Dashboard</a></li>
-                    <li><a href="#" id="nav-pdv" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>PDV</a></li>
-                    <li><a href="#" id="nav-products" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>Produtos</a></li>
-                    <li><a href="#" id="nav-customers" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>Clientes</a></li>
-                    <li><a href="#" id="nav-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>Rel. Vendas</a></li>
-                    <li><a href="#" id="nav-customer-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" /></svg>Rel. Clientes</a></li>
+                    <li><a href="#" id="nav-dashboard" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg><span class="sidebar-text">Dashboard</span></a></li>
+                    <li><a href="#" id="nav-pdv" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg><span class="sidebar-text">PDV</span></a></li>
+                    <li><a href="#" id="nav-products" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg><span class="sidebar-text">Produtos</span></a></li>
+                    <li><a href="#" id="nav-customers" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg><span class="sidebar-text">Clientes</span></a></li>
+                    <li><a href="#" id="nav-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg><span class="sidebar-text">Rel. Vendas</span></a></li>
+                    <li><a href="#" id="nav-customer-reports" class="nav-link flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors duration-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" /></svg><span class="sidebar-text">Rel. Clientes</span></a></li>
                 </ul>
             </nav>
         </aside>
 
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-end px-6 flex-shrink-0">
+            <header class="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 flex-shrink-0">
+                <!-- Botão para Esconder/Mostrar Menu Lateral -->
+                <button id="sidebar-toggle-btn" class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 focus-ring">
+                    <svg id="sidebar-toggle-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
                 <div class="flex items-center gap-4">
+                    <!-- Botão para Trocar Tema (Dark/Light) -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="theme-toggle" class="hidden"/>
+                        <label for="theme-toggle" class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <div class="w-10 h-4 bg-gray-300 dark:bg-gray-600 rounded-full shadow-inner"></div>
+                                <div id="theme-toggle-dot" class="absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 border border-gray-300 dark:border-gray-500 transition-transform"></div>
+                            </div>
+                        </label>
+                    </div>
+                    
                     <label for="sale-date" class="text-sm font-medium text-gray-700 dark:text-gray-300">Data da Venda:</label>
                     <input type="date" id="sale-date" class="w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 rounded-md shadow-sm py-2 px-3 text-sm focus-ring">
                 </div>
@@ -161,7 +183,6 @@
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Forma de Pagamento</label>
-                                    <!-- Botões de pagamento ajustados para melhor responsividade -->
                                     <div id="payment-method" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                         <button data-method="Saldo" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Saldo</button>
                                         <button data-method="Pagar Depois" class="payment-btn border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300 bg-white dark:bg-gray-700 py-2 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors focus-ring">Pagar Depois</button>
@@ -298,14 +319,19 @@
     <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"></div>
 
 
-    <!-- JAVASCRIPT LOGIC (UNCHANGED) -->
+    <!-- JAVASCRIPT LOGIC -->
     <script type="module">
         // --- CONFIGURAÇÃO INICIAL DO SUPABASE ---
         const SUPABASE_URL = 'https://tajxtakefalzlrizkpqq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhanh0YWtlZmFsemxyaXprcHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjAzNjEsImV4cCI6MjA2ODQzNjM2MX0.belYo84KUtRMzhGlq4TZ5P3MXbQXQbLqhJ3A9CzqPGI';
 
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let _supabase;
+        try {
+            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error("Erro ao inicializar o Supabase. Verifique as credenciais.", error);
+        }
+
 
         // --- VARIÁVEIS GLOBAIS E ESTADO DA APLICAÇÃO ---
         let currentView = 'dashboard';
@@ -323,11 +349,14 @@
 
         // --- LÓGICA DE INICIALIZAÇÃO ---
         function initializeAppLogic() {
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('COLE')) {
+            // CORREÇÃO: Verifica se as chaves do Supabase foram preenchidas
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('COLE_SUA')) {
+                 document.getElementById('loading-view').classList.add('hidden');
                  showSimpleMessage("Configuração Necessária", "Por favor, preencha a SUPABASE_URL e a SUPABASE_ANON_KEY no código HTML para conectar ao banco de dados.");
                  return;
             }
             document.getElementById('loading-view').classList.add('hidden');
+            setupEventListeners();
             setupDataListeners();
             setInitialDate();
             showView('dashboard');
@@ -1140,9 +1169,7 @@
         }
 
         // --- CARREGAMENTO DO HTML E EVENTOS ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeAppLogic();
-            
+        function setupEventListeners() {
             // Navegação
             document.querySelectorAll('.nav-link').forEach(link => {
                 const viewId = link.id.replace('nav-', '');
@@ -1233,7 +1260,46 @@
             // Filtros de Data
             document.getElementById('report-date-start').onchange = renderTransactionsTable;
             document.getElementById('report-date-end').onchange = renderTransactionsTable;
-        });
+
+            // **NOVAS FUNCIONALIDADES**
+            // Lógica do Tema (Dark/Light)
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeToggleDot = document.getElementById('theme-toggle-dot');
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            
+            if (currentTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggle.checked = true;
+                themeToggleDot.style.transform = 'translateX(100%)';
+            }
+
+            themeToggle.addEventListener('change', () => {
+                if (themeToggle.checked) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeToggleDot.style.transform = 'translateX(100%)';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    themeToggleDot.style.transform = 'translateX(0)';
+                }
+            });
+
+            // Lógica do Menu Lateral (Sidebar)
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
+            const sidebarTitle = document.getElementById('sidebar-title');
+
+            sidebarToggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('w-64');
+                sidebar.classList.toggle('w-20');
+                sidebarTexts.forEach(text => text.classList.toggle('hidden'));
+                sidebarTitle.classList.toggle('hidden');
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', initializeAppLogic);
     </script>
 </body>
 </html>
