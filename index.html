@@ -292,12 +292,22 @@
                             <div><label for="report-date-end" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Até:</label><input type="date" id="report-date-end" class="mt-1 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus-ring"></div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600 dark:text-green-500">R$ 0,00</p></div>
-                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600 dark:text-blue-500">R$ 0,00</p></div>
-                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Vendas</h4><p id="period-transactions" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
-                        <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
-                    </div>
+                   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 text-center">
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vendido</h4><p id="period-total" class="text-xl font-bold text-green-600 dark:text-green-500">R$ 0,00</p></div>
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Lucro Total</h4><p id="period-profit" class="text-xl font-bold text-blue-600 dark:text-blue-500">R$ 0,00</p></div>
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Vendas</h4><p id="period-transactions" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700"><h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Itens Vendidos</h4><p id="period-items" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p></div>
+    
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700">
+        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Itens em Estoque</h4>
+        <p id="total-stock-items" class="text-xl font-bold text-gray-700 dark:text-gray-300">0</p>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700">
+        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Valor do Estoque (Custo)</h4>
+        <p id="total-stock-value" class="text-xl font-bold text-purple-600 dark:text-purple-500">R$ 0,00</p>
+    </div>
+</div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border dark:border-gray-700 mb-6">
                         <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Fechamento de Caixa</h3>
                         <div id="cash-closing-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"></div>
@@ -337,6 +347,7 @@
                     <div id="customer-report-container" class="space-y-6"></div>
                 </div>
             </main>
+<footer class="text-center p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0"> <p class="text-xs text-gray-500 dark:text-gray-400"> Desenvolvido por Marcos Januario | Sem Desculpas </p> </footer>
         </div>
     </div>
 
@@ -612,26 +623,49 @@
             totalEl.textContent = `R$ ${total.toFixed(2)}`;
         }
 
-        async function renderTransactionsTable() {
-            await fetchTransactionsForReport(); 
-
+       async function renderTransactionsTable() {
+            // 1. Obter todos os elementos do DOM para os KPIs e a tabela
             const tableBody = document.getElementById('transactions-list-table');
             const periodTotalEl = document.getElementById('period-total');
             const periodProfitEl = document.getElementById('period-profit');
             const periodTransactionsEl = document.getElementById('period-transactions');
             const periodItemsEl = document.getElementById('period-items');
             const cashClosingSummaryEl = document.getElementById('cash-closing-summary');
+            const totalStockItemsEl = document.getElementById('total-stock-items'); // KPI Novo
+            const totalStockValueEl = document.getElementById('total-stock-value'); // KPI Novo
 
-            if (!tableBody || !periodTotalEl) return;
+            // 2. Verificar se todos os elementos essenciais existem para evitar erros
+            if (!tableBody || !periodTotalEl || !periodProfitEl || !totalStockItemsEl || !totalStockValueEl) {
+                 console.error("Um ou mais elementos do DOM para o relatório de vendas não foram encontrados.");
+                 return;
+            }
+
+            // 3. Limpar a interface antes de recalcular
             tableBody.innerHTML = '';
+            cashClosingSummaryEl.innerHTML = '';
+            
+            // 4. Calcular e exibir os KPIs de ESTOQUE (que são independentes do período)
+            // A variável global 'products' é usada aqui
+            const totalStockItems = products.reduce((sum, product) => sum + (product.available_stock || 0), 0);
+            const totalStockValue = products.reduce((sum, product) => sum + ((product.available_stock || 0) * (product.cost_price || 0)), 0);
+            totalStockItemsEl.textContent = totalStockItems;
+            totalStockValueEl.textContent = `R$ ${totalStockValue.toFixed(2)}`;
+
+            // 5. Buscar as transações de VENDA do período selecionado
+            await fetchTransactionsForReport(); 
+
+            // 6. Inicializar variáveis para os cálculos do período de vendas
             let periodTotal = 0;
             let periodProfit = 0;
             let periodItems = 0;
             const cashClosing = {};
+            let tableRowsHtml = '';
 
+            // 7. Processar as transações do período (um único loop para eficiência)
             transactionsForReport.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(tx => {
                 const txDate = new Date(tx.created_at);
                 const itemsStr = tx.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                
                 let transactionProfit = 0;
                 tx.items.forEach(item => {
                     const product = products.find(p => p.id == item.productId);
@@ -640,7 +674,17 @@
                     }
                 });
                 
-                tableBody.innerHTML += `
+                // Acumular totais de venda
+                periodTotal += Number(tx.total);
+                periodProfit += transactionProfit;
+                periodItems += tx.items.reduce((sum, item) => sum + item.quantity, 0);
+
+                if (tx.payment_method !== 'Saldo' && tx.payment_method !== 'Pagar Depois') {
+                    cashClosing[tx.payment_method] = (cashClosing[tx.payment_method] || 0) + Number(tx.total);
+                }
+                
+                // Construir a linha da tabela
+                tableRowsHtml += `
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${txDate.toLocaleString('pt-BR')}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">${tx.customer_name}</td>
@@ -652,23 +696,22 @@
                             <button data-id="${tx.id}" class="cancel-sale-btn text-red-600 dark:text-red-500 hover:text-red-900 dark:hover:text-red-400 font-semibold">Cancelar</button>
                         </td>
                     </tr>`;
-                periodTotal += Number(tx.total);
-                periodProfit += transactionProfit;
-                periodItems += tx.items.reduce((sum, item) => sum + item.quantity, 0);
-
-                if (tx.payment_method !== 'Saldo' && tx.payment_method !== 'Pagar Depois') {
-                    cashClosing[tx.payment_method] = (cashClosing[tx.payment_method] || 0) + Number(tx.total);
-                }
             });
+
+            // 8. Atualizar os KPIs de vendas e o fechamento de caixa no DOM
             periodTotalEl.textContent = `R$ ${periodTotal.toFixed(2)}`;
             periodProfitEl.textContent = `R$ ${periodProfit.toFixed(2)}`;
             periodTransactionsEl.textContent = transactionsForReport.length;
             periodItemsEl.textContent = periodItems;
-            
+
             cashClosingSummaryEl.innerHTML = Object.entries(cashClosing)
                 .map(([method, total]) => `<div><span class="font-semibold text-gray-600 dark:text-gray-400">${method}:</span> <span class="text-gray-800 dark:text-gray-200 font-bold">R$ ${total.toFixed(2)}</span></div>`)
                 .join('') || '<p class="text-gray-500 dark:text-gray-400 col-span-full">Nenhum recebimento em caixa no período.</p>';
+            
+            // 9. Inserir todas as linhas da tabela no DOM de uma só vez
+            tableBody.innerHTML = tableRowsHtml;
         }
+
         
         function renderCustomerReports() {
             const container = document.getElementById('customer-report-container');
@@ -792,15 +835,24 @@
             createRealtimeSubscription('balance_logs', fetchAndRenderBalanceLogs);
         }
         
-        async function fetchTransactionsForReport() {
+       async function fetchTransactionsForReport() {
             const reportDateStartInput = document.getElementById('report-date-start');
             const reportDateEndInput = document.getElementById('report-date-end');
             if (!reportDateStartInput || !reportDateEndInput) return;
 
-            const startDate = reportDateStartInput.value + 'T00:00:00';
-            const endDate = reportDateEndInput.value + 'T23:59:59';
+        // NOVO CÓDIGO CORRIGIDO
+        // Cria objetos de data que representam o início e o fim do dia NA SUA ZONA HORÁRIA LOCAL
+        const startOfDay = new Date(reportDateStartInput.value + 'T00:00:00');
+        const endOfDay = new Date(reportDateEndInput.value + 'T23:59:59.999');
+
+        // Converte essas datas para o formato universal (UTC) que o banco de dados entende corretamente
+        const startDate = startOfDay.toISOString();
+        const endDate = endOfDay.toISOString();
+        // FIM DO NOVO CÓDIGO
 
             const { data, error } = await _supabase.from('transactions')
+// ... (resto da função continua igual) ...
+
                 .select('*')
                 .gte('created_at', startDate)
                 .lte('created_at', endDate);
@@ -825,6 +877,7 @@
                 console.error("Erro ao salvar produto:", response.error);
                 showSimpleMessage("Erro", "Não foi possível salvar as informações do produto.");
             }
+ refreshAllData();
         }
         
         async function deleteProduct(id) {
@@ -832,6 +885,7 @@
             if (error) {
                 console.error("Erro ao excluir produto:", error);
             }
+refreshAllData();
         }
         
         async function addCustomer(customerData) {
@@ -857,6 +911,7 @@
                     payment_method: paymentMethod
                 }]);
             }
+refreshAllData();
             return data;
         }
         
@@ -897,6 +952,7 @@
             if(logError) {
                 console.error("Erro ao registrar log de saldo:", logError);
             }
+refreshAllData();
         }
 
         async function finalizeSale() {
@@ -962,6 +1018,7 @@
             selectedPaymentMethod = null;
             document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active'));
             renderCurrentOrder();
+refreshAllData();
         }
         
         async function cancelSale(transactionId) {
@@ -1003,6 +1060,7 @@
                 console.error("Erro ao adicionar categoria:", error);
                 showSimpleMessage("Erro", "Não foi possível adicionar a categoria. Ela já existe?");
             }
+refreshAllData();
         }
 
         // --- LÓGICA DE EXPORTAÇÃO ---
@@ -1074,11 +1132,11 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Editar Produto</h3>
                     <div class="mt-4 space-y-4">
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label><input id="edit-product-name" value="${product.name}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label><select id="edit-product-category" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Custo</label><input id="edit-product-cost-price" type="number" value="${product.cost_price || 0}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Preço de Venda</label><input id="edit-product-price" type="number" value="${product.price}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estoque Disponível</label><input id="edit-product-available-stock" type="number" value="${product.available_stock}" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
                         <button id="edit-product-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
@@ -1112,8 +1170,8 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-auto">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Saldo para ${customer.name}</h3>
                     <div class="mt-4 space-y-4">
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento</label><select id="add-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor (R$)</label><input id="add-balance-amount" type="number" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento</label><select id="add-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
                         <button id="add-balance-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
@@ -1139,12 +1197,12 @@
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg mx-auto">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Novo Cliente</h3>
                     <form id="modal-add-customer-form" class="mt-4 space-y-4">
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo*</label><input type="text" id="modal-customer-name" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefone</label><input type="tel" id="modal-customer-phone" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Limite de Crédito (Ex: 50 para -R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
-                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome Completo*</label><input type="text" id="modal-customer-name" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Telefone*</label><input type="tel" id="modal-customer-phone" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Responsável</label><input type="text" id="modal-customer-responsible" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Limite de Crédito (Ex: 50 para -R$50,00)</label><input type="number" id="modal-customer-limit" value="0" required class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Adicionar Saldo Inicial (Opcional)</label><input type="number" id="modal-customer-balance" value="0" step="0.01" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"></div>
+                        <div id="modal-payment-method-div" class="hidden"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Forma de Pagamento do Saldo</label><select id="modal-balance-payment-method" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring"><option>PIX</option><option>Dinheiro</option><option>Cartão</option></select></div>
                         <div class="mt-6 flex justify-end gap-3">
                             <button type="button" id="add-customer-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
                             <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md shadow-sm text-sm font-medium hover:bg-indigo-700 focus-ring">Salvar Cliente</button>
@@ -1163,13 +1221,24 @@
             document.getElementById('modal-add-customer-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const name = document.getElementById('modal-customer-name').value;
-                 if (!name) {
-                    showSimpleMessage('Erro', 'O campo Nome é obrigatório.');
+                // Pega o valor do telefone
+                const phone = document.getElementById('modal-customer-phone').value;
+
+                // Validação do Nome
+                if (!name) {
+                    showSimpleMessage('Campo Obrigatório', 'O campo Nome Completo deve ser preenchido.');
                     return;
                 }
+
+                // NOVA VALIDAÇÃO: Verifica se o telefone foi preenchido
+                if (!phone) {
+                    showSimpleMessage('Campo Obrigatório', 'O campo Telefone deve ser preenchido.');
+                    return; // Para a execução se o telefone estiver vazio
+                }
+
                 const customerData = {
                     name: name,
-                    phone: document.getElementById('modal-customer-phone').value,
+                    phone: phone, // Usa a variável 'phone' que pegamos
                     responsibleName: document.getElementById('modal-customer-responsible').value,
                     balance: parseFloat(balanceInput.value) || 0,
                     creditLimit: -Math.abs(parseFloat(document.getElementById('modal-customer-limit').value)) || 0,
@@ -1179,6 +1248,7 @@
                 closeModal('add-customer-modal');
                 if (callback && newCustomer) callback(newCustomer.id);
             };
+
         }
 
         function showAddCategoryModal() {
@@ -1187,7 +1257,7 @@
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Adicionar Nova Categoria</h3>
                     <div class="mt-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome da Categoria</label>
-                        <input id="new-category-name" type="text" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-md p-2 shadow-sm focus-ring">
+                        <input id="new-category-name" type="text" class="mt-1 block w-full border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:text-white rounded-md p-2 shadow-sm focus-ring">
                     </div>
                     <div class="mt-6 flex justify-end gap-3">
                         <button id="add-category-cancel-btn" class="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus-ring">Cancelar</button>
@@ -1377,3 +1447,12 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
